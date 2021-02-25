@@ -1,0 +1,430 @@
+package ${controllerPackage};
+
+import com.github.pagehelper.PageInfo;
+<#if listViewModelPackage?default('') != ''>
+import ${listViewModelPackage};
+<#else>
+import com.my.base.ListViewModel;
+</#if>
+<#if resultViewModelPackage?default('') != ''>
+import ${resultViewModelPackage};
+<#else>
+import com.my.base.ResultViewModel;
+</#if>
+<#if searchTypeEnumPackage?default('') != ''>
+import ${searchTypeEnumPackage};
+<#else>
+import com.my.base.SearchTypeEnum;
+</#if>
+import ${modelPackage}.${modelClassName};
+<#list deleteAffectedTableList as dat>
+import ${modelPackage}.${dat.affectedClassName};
+</#list>
+import ${queryModelPackage}.${modelClassName}QueryModel;
+import ${modelServicePackage}.${modelClassName}Service ;
+<#list deleteAffectedTableList as dat>
+import ${modelServicePackage}.${dat.affectedClassName}Service;
+</#list>
+import org.springframework.stereotype.Controller;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.util.*;
+
+
+/**
+ * @author
+ * @version 0.0.1
+ * @function 功能:
+ * @describe 版本描述:
+ * @modifyLog 修改日志:
+ *
+ * @mbg.generated do_not_delete_during_merge
+ */
+@Controller
+@RequestMapping("/${requestUrl}")
+public class ${modelClassName}Controller {
+
+    @Autowired
+    private ${modelClassName}Service ${modelClassName?uncap_first}Service;
+    <#list deleteAffectedTableList as dat>
+    @Autowired
+    private ${dat.affectedClassName}Service ${dat.affectedClassName?uncap_first}Service;
+    </#list>
+
+    /**
+     * 进入页面
+     * @return
+     */
+    @RequestMapping(method = RequestMethod.GET)
+    public String show(){
+        return "${modelClassName?uncap_first}/manager";
+    }
+
+    /**
+     * 分页记录
+     * @param ${modelClassName?uncap_first}QueryModel
+     * @param request
+     * @return
+     */
+    @RequestMapping(method = RequestMethod.GET, value = "page${modelClassName}")
+    @ResponseBody
+    public ListViewModel<${modelClassName}> getPage${modelClassName}(
+            ${modelClassName}QueryModel ${modelClassName?uncap_first}QueryModel,
+            HttpServletRequest request
+    ){
+        //条件集合
+        List<String> property = new ArrayList<>();
+        List<Object> value = new ArrayList<>();
+        List<String> searchType = new ArrayList<>();
+
+        /**
+         * TODO 添加查询条件设置
+         */
+
+        //进行查询
+        PageInfo<${modelClassName}> ${modelClassName?uncap_first}PageInfo = ${modelClassName?uncap_first}Service.findPageInfo(property, value, searchType, ${modelClassName?uncap_first}QueryModel.getOrder(), ${modelClassName}.class, ${modelClassName?uncap_first}QueryModel.getPageNumber(), ${modelClassName?uncap_first}QueryModel.getPageSize());
+
+        //返回结果
+        return new ListViewModel(ListViewModel.CodeEnum.NORMAL.getValue(), ${modelClassName?uncap_first}PageInfo.getTotal(), ${modelClassName?uncap_first}PageInfo.getList());
+    }
+
+    <#if treeStructure?default('') != ''>
+    /**
+     * 获取子节点
+     * @param ${treeStructure.superCdPropertyName}           父级节点Cd
+     * @param request
+     * @param response
+     * @return
+     */
+    @RequestMapping(value = "getChild${modelClassName}", method = RequestMethod.POST)
+    @ResponseBody
+    public List<${modelClassName}> getChild(
+            @RequestParam(value = "${treeStructure.superCdPropertyName?uncap_first}", required = false, defaultValue = "") String ${treeStructure.superCdPropertyName?uncap_first},
+            HttpServletRequest request, HttpServletResponse response
+    ){
+        List<${modelClassName}> ${modelClassName?uncap_first}List = new ArrayList<>();
+
+        //条件集合
+        List<String> property = new ArrayList<>();
+        List<Object> value = new ArrayList<>();
+        List<String> searchType = new ArrayList<>();
+
+        //上级cd条件
+        property.add("${treeStructure.superCdPropertyName}");
+        value.add(${treeStructure.superCdPropertyName});
+        searchType.add(SearchTypeEnum.EQ.getValue());
+
+        /**
+         * TODO 添加其他筛选条件设置
+         */
+
+        //排序
+        String order = " ${treeStructure.selfCdPropertyName} asc ";
+        //查询
+        ${modelClassName?uncap_first}List = ${modelClassName?uncap_first}Service.findInfo(property, value, searchType, order, ${modelClassName}.class);
+
+        //返回数据
+        return ${modelClassName?uncap_first}List;
+    }
+    </#if>
+
+    /**
+     * 单条信息
+     <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+        <#list keyColumn_javaProperty as p>
+     * @param ${p}
+        </#list>
+     </#if>
+     * @param request
+     * @return
+     */
+    @RequestMapping(method = RequestMethod.POST, value = "get${modelClassName}")
+    @ResponseBody
+    public ResultViewModel get${modelClassName}(
+            <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+                <#list keyColumn_javaProperty as p>
+            @RequestParam(value = "${p}", required = true) String ${p},
+                </#list>
+            </#if>
+            HttpServletRequest request
+    ){
+        <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+        <#if (keyColumn_javaProperty?size)?default(0) == 1>
+        //查询记录
+        ${modelClassName} ${modelClassName?uncap_first} = ${modelClassName?uncap_first}Service.getByUniqueKey("${keyColumn_javaProperty[0]}", ${keyColumn_javaProperty[0]}, ${modelClassName}.class);
+        <#else>
+        //查询记录
+        ${modelClassName} ${modelClassName?uncap_first} = ${modelClassName?uncap_first}Service.getByUnionUniqueKey(
+                new String[]{<#list keyColumn_javaProperty as p>"${p}"<#if p_has_next>, </#if></#list>},
+                new String[]{<#list keyColumn_javaProperty as p>${p}<#if p_has_next>, </#if></#list>},
+                ${modelClassName}.class);
+        </#if>
+        </#if>
+
+        //返回结果
+        return new ResultViewModel(ResultViewModel.StateEnum.NORMAL.getValue(), "", ${modelClassName?uncap_first});
+    }
+
+    /**
+     * 增加
+     * @param ${modelClassName?uncap_first}        新增的信息
+     * @return
+     */
+    @RequestMapping(value = "create${modelClassName}", method = RequestMethod.POST)
+    @ResponseBody
+    @Transactional(propagation=Propagation.REQUIRED, rollbackFor=RuntimeException.class)
+    public ResultViewModel create${modelClassName}(
+            ${modelClassName} ${modelClassName?uncap_first},
+            HttpServletRequest request
+    ){
+        return save${modelClassName}(${modelClassName?uncap_first}, request);
+    }
+
+    /**
+     * 修改
+     * @param ${modelClassName?uncap_first}        修改的信息
+     * @return
+     */
+    @RequestMapping(value = "update${modelClassName}", method = RequestMethod.POST)
+    @ResponseBody
+    @Transactional(propagation=Propagation.REQUIRED, rollbackFor=RuntimeException.class)
+    public ResultViewModel update${modelClassName}(
+            ${modelClassName} ${modelClassName?uncap_first},
+            HttpServletRequest request
+    ){
+        return save${modelClassName}(${modelClassName?uncap_first}, request);
+    }
+
+    /**
+     * 增改
+     * @param ${modelClassName?uncap_first}        保存的信息
+     * @return
+     */
+    private ResultViewModel save${modelClassName}(
+            ${modelClassName} ${modelClassName?uncap_first},
+            HttpServletRequest request
+    ){
+
+        /**
+         * TODO 设置页面中没有的额外信息
+         */
+
+        //修改
+        if(${modelClassName?uncap_first}.get${keyColumn_javaProperty[0]?cap_first}() != null){
+            //修改节点信息
+            ${modelClassName?uncap_first}Service.updateByPrimaryKeySelective(${modelClassName?uncap_first});
+        }
+        //新增
+        else{
+            //保存节点信息
+            ${modelClassName?uncap_first}Service.save(${modelClassName?uncap_first});
+        }
+
+        return new ResultViewModel(ResultViewModel.StateEnum.NORMAL.getValue());
+    }
+
+    <#list checkUniqueList as c>
+    <#if c.uniquePropertyNameList[0] != "">
+    /**
+     * 验证唯一性
+     <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+        <#list keyColumn_javaProperty as p>
+     * @param ${p}
+        </#list>
+     </#if>
+     <#list c.uniquePropertyNameList as upn>
+     * @param check_${upn}
+     </#list>
+     * @return
+     */
+    @RequestMapping(value = "check<#list c.uniquePropertyNameList as upn>${upn?cap_first}<#if upn_has_next>AND</#if></#list>", method = RequestMethod.GET)
+    @ResponseBody
+    public ResultViewModel check<#list c.uniquePropertyNameList as upn>${upn?cap_first}<#if upn_has_next>AND</#if></#list>(
+            <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+            <#list keyColumn_javaProperty as p>
+            @RequestParam(value = "${p}", required = false, defaultValue = "") String ${p},
+            </#list>
+            </#if>
+            <#list c.uniquePropertyNameList as upn>
+            @RequestParam(value = "check_${upn}", required = true) String check_${upn},
+            </#list>
+            HttpServletRequest request
+    ){
+        List<${modelClassName}> ${modelClassName?uncap_first}List = ${modelClassName?uncap_first}Service.findInfo(
+                Arrays.asList(new String[]{<#list c.uniquePropertyNameList as upn>"${upn}"<#if upn_has_next>, </#if></#list>}),
+                Arrays.asList(new String[]{<#list c.uniquePropertyNameList as upn>check_${upn}<#if upn_has_next>, </#if></#list>}),
+                Arrays.asList(new String[]{<#list c.uniquePropertyNameList as upn>SearchTypeEnum.EQ.getValue()<#if upn_has_next>, </#if></#list>}),
+                "", ${modelClassName}.class);
+
+        //完全没有用过
+        if(${modelClassName?uncap_first}List.size() == 0){
+            return new ResultViewModel(ResultViewModel.StateEnum.NORMAL.getValue(), "该代码可用！");
+        }
+        //被用过一次，判断是不是当前这条记录用的
+        else if(${modelClassName?uncap_first}List.size() == 1){
+            ${modelClassName} ${modelClassName?uncap_first} = ${modelClassName?uncap_first}List.get(0);
+
+            //如果用的的记录的主键和当前这条记录的主键一致，说明是这条记录用的
+            <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+            if(<#list keyColumn_javaProperty as p>${p}.equals(${modelClassName?uncap_first}.get${p?cap_first}()) <#if p_has_next>&&</#if></#list>){
+                return new ResultViewModel(ResultViewModel.StateEnum.NORMAL.getValue(), "该代码可用！");
+            }
+
+            //不是这条记录的话，返回已经被用了
+            return new ResultViewModel(ResultViewModel.StateEnum.ABNORMAL.getValue(), "该代码已存在，请检查！");
+            </#if>
+        }
+        //被用过多次
+        else{
+            return new ResultViewModel(ResultViewModel.StateEnum.ABNORMAL.getValue(), "该代码已存在，请检查！");
+        }
+    }
+
+    </#if>
+    </#list>
+    <#if (deleteAffectedTableList?size) gt 0>
+    /**
+     * 判断删除影响
+     <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+        <#list keyColumn_javaProperty as p>
+     * @param ${p}
+        </#list>
+     </#if>
+     * @param request
+     * @return
+     */
+     @RequestMapping(value = "checkAffected_delete${modelClassName}", method = RequestMethod.GET)
+     @ResponseBody
+     public ResultViewModel checkAffected(
+             <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+                 <#list keyColumn_javaProperty as p>
+             @RequestParam(value = "${p}", required = true) String ${p},
+                 </#list>
+             </#if>
+             HttpServletRequest request
+     ){
+        List<Map<String, List>> affectedList = new ArrayList<>();
+
+        //先获取到要删除的记录
+        ${modelClassName} ${modelClassName?uncap_first} = (${modelClassName})get${modelClassName}(<#if (keyColumn_javaProperty?size)?default(0) gt 0><#list keyColumn_javaProperty as p>${p}, </#list></#if>request).getData();
+
+        <#list deleteAffectedTableList as dat>
+            <#if (dat.sourcePropertyNameList?size)?default(0) gt 0>
+        //关联影响
+        List<${dat.affectedClassName}> ${dat.affectedClassName?uncap_first}List = ${dat.affectedClassName?uncap_first}Service.findInfo(
+                Arrays.asList(new String[]{<#list dat.affectedPropertyNameList as apnl>"${apnl}"<#if apnl_has_next>, </#if></#list>}),
+                Arrays.asList(new Object[]{<#list dat.sourcePropertyNameList as spnl>${modelClassName?uncap_first}.get${spnl?cap_first}()<#if spnl_has_next>, </#if></#list>}),
+                Arrays.asList(new String[]{<#list dat.affectedPropertyNameList as apnl>SearchTypeEnum.EQ.getValue()<#if apnl_has_next>, </#if></#list>}),
+                "",
+                ${dat.affectedClassName}.class);
+        Map<String, List> ${dat.affectedClassName?uncap_first}Map = new HashMap();
+        ${dat.affectedClassName?uncap_first}Map.put("${dat.affectedClassName?uncap_first}List", ${dat.affectedClassName?uncap_first}List);
+        affectedList.add(${dat.affectedClassName?uncap_first}Map);
+            </#if>
+
+        </#list>
+        //返回结果
+        return new ResultViewModel(ResultViewModel.StateEnum.NORMAL.getValue(), "", affectedList);
+     }
+     </#if>
+
+    <#if deleteStateColumn?default('') != '' && (deleteStateColumn.propertyName)?default('') != ''>
+    /**
+     * 删除一条【状态删除】
+     <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+        <#list keyColumn_javaProperty as p>
+     * @param ${p}
+        </#list>
+     </#if>
+     * @param request
+     * @return
+     */
+    @RequestMapping(value = "delete${modelClassName}_state", method = RequestMethod.GET)
+    @ResponseBody
+    public ResultViewModel delete${modelClassName}_state(
+            <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+                <#list keyColumn_javaProperty as p>
+            @RequestParam(value = "${p}", required = true) String ${p},
+                </#list>
+            </#if>
+            HttpServletRequest request
+    ){
+        //先获取到要删除的记录
+        ${modelClassName} ${modelClassName?uncap_first} = (${modelClassName})get${modelClassName}(<#if (keyColumn_javaProperty?size)?default(0) gt 0><#list keyColumn_javaProperty as p>${p}, </#list></#if>request).getData();
+
+        //获取到的不是null
+        if(${modelClassName?uncap_first} != null){
+            //设置删除状态
+            ${modelClassName?uncap_first}.set${(deleteStateColumn.propertyName)?cap_first}((short)${deleteStateColumn.deleteState});
+            //修改
+            ${modelClassName?uncap_first}Service.updateByPrimaryKeySelective(${modelClassName?uncap_first});
+        }
+
+        return new ResultViewModel(ResultViewModel.StateEnum.NORMAL.getValue());
+    }
+    </#if>
+
+    /**
+     * 删除一条【物理删除】
+     <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+        <#list keyColumn_javaProperty as p>
+     * @param ${p}
+        </#list>
+     </#if>
+     <#if (deleteAffectedTableList?size) gt 0>
+     * @param deleteAffected 删除关联【true/false，如果是true相关的都删掉，如果是false不删除关联，只删除自己】
+     </#if>
+     * @param request
+     * @return
+     */
+     @RequestMapping(value = "delete${modelClassName}_physics", method = RequestMethod.GET)
+     @ResponseBody
+     public ResultViewModel delete${modelClassName}_physics(
+             <#if (keyColumn_javaProperty?size)?default(0) gt 0>
+                 <#list keyColumn_javaProperty as p>
+             @RequestParam(value = "${p}", required = true) String ${p},
+                 </#list>
+             </#if>
+             <#if (deleteAffectedTableList?size)?default(0) gt 0>
+             String deleteAffected,
+             </#if>
+             HttpServletRequest request
+     ){
+        //先获取到要删除的记录
+        ${modelClassName} ${modelClassName?uncap_first} = (${modelClassName})get${modelClassName}(<#if (keyColumn_javaProperty?size)?default(0) gt 0><#list keyColumn_javaProperty as p>${p}, </#list></#if>request).getData();
+     <#if (deleteAffectedTableList?size)?default(0) gt 0>
+
+        //如果删除关联
+        if(deleteAffected.equals("true")){
+            <#list deleteAffectedTableList as dat>
+                <#if (dat.sourcePropertyNameList?size)?default(0) gt 0>
+            //删除关联
+            ${dat.affectedClassName?uncap_first}Service.deleteByProperty(
+                new String[]{<#list dat.affectedPropertyNameList as apnl>"${apnl}"<#if apnl_has_next>, </#if></#list>},
+                new Object[]{<#list dat.sourcePropertyNameList as spnl>${modelClassName?uncap_first}.get${spnl?cap_first}()<#if spnl_has_next>, </#if></#list>},
+                new String[]{<#list dat.affectedPropertyNameList as apnl>SearchTypeEnum.EQ.getValue()<#if apnl_has_next>, </#if></#list>},
+                ${dat.affectedClassName}.class);
+                </#if>
+
+            </#list>
+        }
+        </#if>
+        //删除本条记录
+        ${modelClassName?uncap_first}Service.delete(${modelClassName?uncap_first});
+
+        <#if treeStructure?default('') != '' && (treeStructure.isParentPropertyName)?default('') != ''>
+        //设置所属父节点的isParent
+        ${modelClassName?uncap_first}Service.setIsParent(${modelClassName?uncap_first}.get${treeStructure.superCdPropertyName?cap_first}());
+
+        </#if>
+        return new ResultViewModel(ResultViewModel.StateEnum.NORMAL.getValue());
+     }
+}

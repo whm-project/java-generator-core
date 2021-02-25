@@ -1,0 +1,36 @@
+package ${servicePackage};
+
+import ${modelPackage};
+import ${baseServicePackage};
+
+/**
+ * @author
+ * @version 0.0.1
+ * @date ${generatedDate}
+ * @time ${generatedTime}
+ * @function 功能:
+ * @describe 版本描述:
+ * @modifyLog 修改日志:
+ *
+ * @mbg.generated do_not_delete_during_merge
+ */
+public interface ${serviceInterface} extends ${baseServiceInterface} {
+
+    <#if treeStructure?default('') != ''>
+    /**
+     * 修改节点cd，需修改直属下级的supercd<#if (treeStructure.treeIndexPropertyName)?default('') != '' || (treeStructure.isParentColumnName)?default('') != ''>和所有子节点的index</#if>
+     * @param selfCd_old
+     * @param selfCd_new
+     */
+    void nodeUpdateCd(String selfCd_old, String selfCd_new);
+
+    <#if (treeStructure.isParentPropertyName)?default('') != ''>
+    /**
+     * 设置是否是父节点
+     * @param cd
+     */
+    void setIsParent(String cd);
+    </#if>
+    </#if>
+
+}

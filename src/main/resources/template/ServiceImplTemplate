@@ -1,0 +1,165 @@
+package ${templatePackage};
+
+import ${baseServiceImplPackage};
+<#if searchTypeEnumPackage?default('') != ''>
+import ${searchTypeEnumPackage};
+<#else>
+import com.my.base.SearchTypeEnum;
+</#if>
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import ${mapperPackage};
+import ${servicePackage};
+import ${modelPackage};
+import org.springframework.transaction.annotation.Transactional;
+<#if columnsHasBLOB == true>
+import ${modelPackage}WithBLOBs;
+</#if>
+
+import java.util.*;
+
+
+/**
+ * @author
+ * @version 0.0.1
+ * @date ${generatedDate}
+ * @time ${generatedTime}
+ * @function 功能:
+ * @describe 版本描述:
+ * @modifyLog 修改日志:
+ *
+ * @mbg.generated do_not_delete_during_merge
+ */
+@Service
+@Transactional(rollbackFor = Exception.class)
+public class ${className} extends BaseServiceImpl<${modelClazz}> implements ${serviceInterface}  {
+
+    @Autowired
+    private ${mapperType} ${mapperName};
+
+    <#if treeStructure?default('') != ''>
+    /**
+     * 更新【有改变的字段】
+     * @param ${modelClazz?uncap_first}
+     * @return
+     */
+    @Override
+    public int updateByPrimaryKeySelective(${modelClazz} ${modelClazz?uncap_first}){
+        int result = 0;
+        
+        //本级cd
+        String selfCd  = ${modelClazz?uncap_first}.get${treeStructure.selfCdPropertyName?cap_first}();
+        //上级cd
+        String superCd = ${modelClazz?uncap_first}.get${treeStructure.superCdPropertyName?cap_first}();
+        //获取上级记录
+        ${modelClazz} super${modelClazz?uncap_first} = getByUniqueKey("${treeStructure.selfCdPropertyName}", superCd, ${modelClazz}.class);
+        <#if (treeStructure.treeIndexPropertyName)?default('') != ''>
+    
+        //设置index
+        if(super${modelClazz?uncap_first} != null){
+            String superIndex = super${modelClazz?uncap_first}.get${treeStructure.treeIndexPropertyName?cap_first}();
+            ${modelClazz?uncap_first}.set${treeStructure.treeIndexPropertyName?cap_first}(superIndex + selfCd);
+        }
+        </#if>
+        
+        //修改前节点信息【根据主键获取】
+        ${modelClazz} ${modelClazz?uncap_first}_old = getByUnionUniqueKey(
+                new String[]{<#list keyColumn_javaProperty as p>"${p}"<#if p_has_next>, </#if></#list>},
+                new String[]{<#list keyColumn_javaProperty as p>${modelClazz?uncap_first}.get${p?cap_first}().toString()<#if p_has_next>, </#if></#list>},
+                ${modelClazz}.class);
+        <#if (treeStructure.treeIndexPropertyName)?default('') != '' || (treeStructure.isParentColumnName)?default('') != ''>
+        //修改前本级cd
+        String selfCd_old = ${modelClazz?uncap_first}_old.get${treeStructure.selfCdPropertyName?cap_first}();
+        //修改前上级cd
+        String superCd_old = ${modelClazz?uncap_first}_old.get${treeStructure.superCdPropertyName?cap_first}();
+
+        </#if>
+        //修改节点信息
+        result = ${mapperName}.updateByPrimaryKeySelective(${modelClazz?uncap_first});
+        
+        //判断自己cd是否改变了，如果改变了
+        if(!selfCd_old.equals(selfCd)){
+            nodeUpdateCd(selfCd_old, selfCd);
+        }
+        <#if (treeStructure.isParentPropertyName)?default('') != ''>
+
+        //判断父级cd是不是改变了，如果改变了，原父级节点的IsParent可能需要修改
+        if(!superCd_old.equals(superCd)){
+            setIsParent(superCd_old);
+        }
+        
+        //设置上级节点是父节点
+        super${modelClazz?uncap_first}.set${treeStructure.isParentPropertyName?cap_first}((short)1);
+        //保存上级节点信息
+        ${mapperName}.updateByPrimaryKeySelective(super${modelClazz?uncap_first});
+        </#if>
+
+        return result;
+    }
+
+    <#if (treeStructure.isParentPropertyName)?default('') != ''>
+    /**
+     * 新增
+     *
+     * @param ${modelClazz?uncap_first}
+     * @return
+     */
+    @Override
+    public int save(${modelClazz} ${modelClazz?uncap_first}) {
+        int result = 0;
+
+        //设置自己不是父节点
+        ${modelClazz?uncap_first}.set${treeStructure.isParentPropertyName?cap_first}((short)0);
+        //保存节点信息
+        result = ${mapperName}.insertSelective(${modelClazz?uncap_first});
+
+        //设置上级记录isParent
+        setIsParent(${modelClazz?uncap_first}.get${treeStructure.superCdPropertyName?cap_first}());
+
+        return result;
+    }
+
+    /**
+     * 设置是否是父节点
+     * @param cd
+     */
+    @Override
+    public void setIsParent(String cd) {
+        //节点信息
+        ${modelClazz} node = getByUniqueKey("${treeStructure.selfCdPropertyName}", cd, ${modelClazz}.class);
+        //判断是否有子节点
+        List<${modelClazz}> childList = findInfo("${treeStructure.superCdPropertyName}", cd, SearchTypeEnum.EQ.getValue(), "", ${modelClazz}.class);
+        //如果没有子节点了，设置原父节点的isParent为0
+        if(childList.size() <= 0){
+            node.set${treeStructure.isParentPropertyName?cap_first}((short)0);
+            ${mapperName}.updateByPrimaryKeySelective(node);
+        }
+    }
+    </#if>
+
+    /**
+     * 修改节点cd，需修改直属下级的supercd<#if (treeStructure.treeIndexPropertyName)?default('') != '' || (treeStructure.isParentColumnName)?default('') != ''>和所有子节点的index</#if>
+     * @param selfCd_old
+     * @param selfCd_new
+     */
+    @Override
+    public void nodeUpdateCd(String selfCd_old, String selfCd_new){
+        //直属下级的superCd应该改变
+        ${modelClazz} updateSupercd_model = new ${modelClazz}();
+        updateSupercd_model.set${treeStructure.superCdPropertyName?cap_first}(selfCd_new);
+        updateInfoSelective(updateSupercd_model, "${treeStructure.superCdPropertyName?cap_first}", selfCd_old, SearchTypeEnum.EQ.getValue(), ${modelClazz}.class);
+        <#if (treeStructure.treeIndexPropertyName)?default('') != ''>
+
+        //所有下级的index应该改变
+        List<${modelClazz}> childList = findInfo("${treeStructure.treeIndexPropertyName}", "%"+selfCd_old+"_%", SearchTypeEnum.LIKE.getValue(), "", ${modelClazz}.class);
+        //循环子节点
+        for(${modelClazz} child : childList){
+            //设置子节点的index
+            child.set${treeStructure.treeIndexPropertyName?cap_first}(child.get${treeStructure.treeIndexPropertyName?cap_first}().replace(selfCd_new, selfCd_old));
+            ${mapperName}.updateByPrimaryKeySelective(child);
+        }
+        </#if>
+    }
+
+    </#if>
+}
