@@ -34,6 +34,9 @@ import org.mybatis.generator.exception.InvalidConfigurationException;
  */
 public class Configuration {
 
+    /** The permissionKey. */
+    private String permissionKey;
+
     /** The contexts. */
     private List<Context> contexts;
     
@@ -45,6 +48,7 @@ public class Configuration {
      */
     public Configuration() {
         super();
+        permissionKey = "";
         contexts = new ArrayList<Context>();
         classPathEntries = new ArrayList<String>();
     }
@@ -95,6 +99,10 @@ public class Configuration {
             }
         }
 
+        if(!permissionKey.equals("123456")){
+            errors.add(getString("ValidationError.permissionKey")); //$NON-NLS-1$
+        }
+
         if (errors.size() > 0) {
             throw new InvalidConfigurationException(errors);
         }
@@ -134,6 +142,14 @@ public class Configuration {
         }
 
         return null;
+    }
+
+    /**
+     * set the peimissionKey
+     * @param permissionKey
+     */
+    public void setPermissionKey(String permissionKey) {
+        this.permissionKey = permissionKey;
     }
 
     /**

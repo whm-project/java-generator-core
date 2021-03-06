@@ -251,12 +251,6 @@ public class MyBatisGenerator {
         int totalSteps = 0;
         for (Context context : contextsToRun) {
             totalSteps += context.getIntrospectionSteps();
-
-            String permissionKey = context.getProperties().get("permissionKey").toString();
-            if(!permissionKey.equals("123456")){
-                System.err.println("您没有权限或权限已到期！");
-                return;
-            }
         }
         callback.introspectionStarted(totalSteps);
 

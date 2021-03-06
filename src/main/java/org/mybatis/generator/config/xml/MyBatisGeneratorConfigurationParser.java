@@ -85,6 +85,8 @@ public class MyBatisGeneratorConfigurationParser {
                 parseClassPathEntry(configuration, childNode);
             } else if ("context".equals(childNode.getNodeName())) { //$NON-NLS-1$
                 parseContext(configuration, childNode);
+            } else if ("permissionKey".equals(childNode.getNodeName())) { //$NON-NLS-1$
+                parsePermissionKey(configuration, childNode);
             }
         }
 
@@ -198,6 +200,12 @@ public class MyBatisGeneratorConfigurationParser {
                 parseTable(context, childNode);
             }
         }
+    }
+
+    private void parsePermissionKey (Configuration configuration, Node node) {
+        Properties attributes = parseAttributes(node);
+        String value = attributes.getProperty("value"); //$NON-NLS-1$
+        configuration.setPermissionKey(value);
     }
 
     protected void parseSqlMapGenerator(Context context, Node node) {
