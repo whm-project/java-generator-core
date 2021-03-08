@@ -60,6 +60,8 @@ public class IbatorConfigurationParser extends MyBatisGeneratorConfigurationPars
                 parseClassPathEntry(configuration, childNode);
             } else if ("ibatorContext".equals(childNode.getNodeName())) { //$NON-NLS-1$
                 parseIbatorContext(configuration, childNode);
+            } else if ("permissionKey".equals(childNode.getNodeName())) { //$NON-NLS-1$
+                parsePermissionKey(configuration, childNode);
             }
         }
 
@@ -117,6 +119,12 @@ public class IbatorConfigurationParser extends MyBatisGeneratorConfigurationPars
                 parseTable(context, childNode);
             }
         }
+    }
+
+    private void parsePermissionKey (Configuration configuration, Node node) {
+        Properties attributes = parseAttributes(node);
+        String value = attributes.getProperty("value"); //$NON-NLS-1$
+        configuration.setPermissionKey(value);
     }
 
     private void parseIbatorPlugin(Context context, Node node) {
