@@ -48,7 +48,7 @@ public class Configuration {
      */
     public Configuration() {
         super();
-        permissionKey = "";
+        permissionKey = "123456";
         contexts = new ArrayList<Context>();
         classPathEntries = new ArrayList<String>();
     }
@@ -100,7 +100,7 @@ public class Configuration {
         }
 
         if(!permissionKey.equals("123456")){
-            errors.add(getString("ValidationError.permissionKey")); //$NON-NLS-1$
+            errors.add(getString("您没有权限或权限已过期！")); //$NON-NLS-1$
         }
 
         if (errors.size() > 0) {
