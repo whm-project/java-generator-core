@@ -21,6 +21,7 @@
  "http://192.168.100.142/PUBLIC/DTD/mybatis-generator-config_1_0.dtd">
 
 <generatorConfiguration>
+  <permissionKey value="123456"></permissionKey>
   <properties resource="scripts/database.properties"/>
   
   <context id="FlatJava5" defaultModelType="flat">

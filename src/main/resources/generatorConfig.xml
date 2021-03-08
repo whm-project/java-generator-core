@@ -2,10 +2,14 @@
 <!DOCTYPE generatorConfiguration PUBLIC "-//mybatis.org//DTD MyBatis Generator Configuration 1.0//EN"
         ":/mybatis-generator-config_1_0.dtd" >
 <generatorConfiguration>
+    <permissionKey value="123456" />
+
     <!--<classPathEntry location="F:\tools\libs\com\microsoft\sqlserver\sqljdbc4\4.4\sqljdbc4-4.4.jar" />-->
     <context id="my" targetRuntime="MyBatis3Simple" >
         <property name="javaFileEncoding" value="UTF-8"/>
         <property name="mergeable" value="true" />
+        <property name="mergeable" value="true" />
+
         <plugin type="org.mybatis.generator.plugins.EqualsHashCodePlugin" />
         <plugin type="org.mybatis.generator.plugins.CaseInsensitiveLikePlugin"/>
         <plugin type="org.mybatis.generator.plugins.SerializablePlugin"/>

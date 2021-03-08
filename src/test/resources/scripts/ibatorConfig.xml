@@ -21,6 +21,7 @@
   "http://ibatis.apache.org/dtd/ibator-config_1_0.dtd">
 
 <ibatorConfiguration>
+  <permissionKey value="123456"></permissionKey>
   <ibatorContext id="FlatJava5" targetRuntime="Ibatis2Java5" defaultModelType="flat">
     <ibatorPlugin type="org.mybatis.generator.plugins.EqualsHashCodePlugin" />
     <ibatorPlugin type="org.mybatis.generator.plugins.SqlMapConfigPlugin" >
