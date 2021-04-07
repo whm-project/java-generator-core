@@ -1,0 +1,210 @@
+<#if treeStructure?default('') != ''>
+<!-- 树形表 -->
+<!doctype html>
+<html>
+	<head>
+    ${r"<#global"} _b=springMacroRequestContext.getContextUrl("")>
+    ${r"<#global"} basePath=request.contextPath />
+
+        <meta charset="utf-8">
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+        <link rel="stylesheet" href="${r"${basePath}"}/static/third/bootstrap/bootstrap-3.3.7-dist/css/bootstrap.css" type="text/css"/>
+        <link rel="stylesheet" href="${r"${basePath}"}/static/third/ztree/css/metroStyle/metroStyle.css" type="text/css">
+	</head>
+
+	<body>
+		<!-- 内容 -->
+		<div style="position:absolute; top:10px; bottom:10px; left :0; right:0; overflow:hidden;">
+			<!--树形 -->
+			<div style="float: left; width: 260px; height:100%; padding:10px; overflow:auto; border-right:dashed 1px #333333;">
+				<ul id="ztree_ul" class="ztree"></ul>
+			</div>
+
+			<!--详细信息-->
+			<div style="float: left; width: calc( 100% - 260px); min-width:; overflow:auto; height:100%; padding:20px;">
+				<form class="form-horizontal" role="form" id="infoForm">
+                    <!-- 主键隐藏 -->
+                    <#if (keyColumn?size)?default(0) gt 0>
+                        <#list keyColumn as k>
+                    <input class="form-control" type="hidden" id="${(k.javaProperty)?default('')}" name="${(k.javaProperty)?default('')}" />
+                        </#list>
+                    </#if>
+
+				    <#if (baseColumns?size)?default(0) gt 12>
+				    <!-- 双行展示 -->
+				    <#list baseColumns as b>
+				    <#if b_index?default(0) % 2 == 0>
+				    <div class="form-group">
+				    </#if>
+                        <label for="${(b.javaProperty)?default('')}" class="col-sm-2 control-label">${(b.remarks)?default('')}：</label>
+                        <div class="col-md-3">
+                            <input class="form-control" type="text" id="${(b.javaProperty)?default('')}" name="${(b.javaProperty)?default('')}" placeholder="请输入${(b.remarks)?default('')}"/>
+                        </div>
+				    <#if b_index?default(0) % 2 == 1>
+                    </div>
+				    </#if>
+                    </#list>
+
+				    <#else>
+				    <!-- 单行展示 -->
+				    <#list baseColumns as b>
+                    <div class="form-group">
+                        <label for="${(b.javaProperty)?default('')}" class="col-sm-2 control-label">${(b.remarks)?default('')}：</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="${(b.javaProperty)?default('')}" name="${(b.javaProperty)?default('')}" placeholder="请输入${(b.remarks)?default('')}">
+                        </div>
+                    </div>
+                    </#list>
+				    </#if>
+
+					<div class="form-group" style="margin-top:36px">
+						<div class="col-sm-2"></div>
+						<div class="col-sm-8">
+							<button class="btn btn-primary" type="button" style="margin-right:30px; padding:6px 50px;" onclick="subInfo()">保存</button>
+							<button class="btn" type="button" style="padding:6px 50px;">取消</button>
+						</div>
+					</div>
+				</form>
+			</div>
+		</div>
+
+        <script>
+            var baseOrgCd = "${r"${prefix_orgCd?default('')}"}";
+            var basePath = "${r"${basePath?default('')}"}";
+            var currentMenuCd = "${r"${RequestParameters.menucd?default('')}"}";
+        </script>
+
+        <script src="${r"${basePath}"}/static/third/js/jquery.min.js"></script>
+        <script src="${r"${basePath}"}/static/third/ztree/js/jquery.ztree.core.js" type="text/javascript"></script>
+        <script src="${r"${basePath}"}/static/third/ztree/js/jquery.ztree.excheck.js" type="text/javascript"></script>
+        <script src="${r"${basePath}"}/static/third/ztree/js/jquery.ztree.exedit.js" type="text/javascript"></script>
+        <script src="${r"${basePath}"}/static/${r"${"}(prefix_orgLayoutLib)?default('')${r"}"}/js/common/ztreeCommon.js" type="text/javascript"></script>
+        <script src="${r"${basePath}"}/static/${r"${"}(prefix_orgLayoutLib)?default('')${r"}"}/js/${modelClassName?default('')?lower_case}/manager.js" type="text/javascript"></script>
+    </body>
+</html>
+
+<#else>
+<!doctype html>
+<html>
+	<head>
+    ${r"<#global"} _b=springMacroRequestContext.getContextUrl("")>
+    ${r"<#global"} basePath=request.contextPath />
+
+		<meta charset="utf-8">
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+
+        <link rel="stylesheet" href="${r"${basePath}"}/static/third/bootstrap/bootstrap-3.3.7-dist/css/bootstrap.css" type="text/css"/>
+        <link rel="stylesheet" href="${r"${basePath}"}/static/third/bootstrap/bootstrap-table-master/dist/bootstrap-table.css" type="text/css"/>
+        <link rel="stylesheet" href="${r"${basePath}"}/static/third/bootstrap/bootstrap-table-master/dist/extensions/fixed-columns/bootstrap-table-fixed-columns.css" type="text/css"/>
+	</head>
+
+	<body style="position: absolute; top: 0; bottom: 0; left: 0; right: 0;">
+		<!-- 查询 -->
+		<div style="padding:10px; white-space: nowrap; overflow:auto; height:52px;">
+			<form class="form-search"  id="searchDiv">
+			    <#list baseColumns as b>
+			    <#if b.jdbcType ==91 || b.jdbcType ==92 || b.jdbcType ==93>
+                <!-- 时间类型 -->
+                <label>${(b.remarks)?default('')}：</label>
+                <input style="padding-left: 14px; padding-right: 14px; border-radius: 14px; margin: 4px; border: 1px solid #ccc;" name="${(b.javaProperty)?default('')}_start" id="search_${(b.javaProperty)?default('')}_start">
+                <label>—</label>
+                <input style="padding-left: 14px; padding-right: 14px; border-radius: 14px; margin: 4px; border: 1px solid #ccc;" name="${(b.javaProperty)?default('')}_end" id="search_${(b.javaProperty)?default('')}_end">
+                <#else>
+                <!-- 非时间类型 -->
+                <label>${(b.remarks)?default('')}：</label>
+                <input style="padding-left: 14px; padding-right: 14px; border-radius: 14px; margin: 4px; border: 1px solid #ccc;" name="${(b.javaProperty)?default('')}" id="search_${(b.javaProperty)?default('')}" placeholder="请输入${(b.remarks)?default('')}">
+			    </#if>
+
+			    </#list>
+				<button type="button" class="btn btn-success btn-xs" style="padding:1px 10px;" onClick="searchInfo()">查询</button>
+			</form>
+		</div>
+
+		<!-- 表格 -->
+		<div style="width:100%; height:calc(100% - 52px); padding: 10px;">
+			<table id="dataTable"></table>
+		</div>
+
+		<!-- 增改 -->
+		<div class="modal fade" id="addDiv" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+			<form id="infoForm" class="form-horizontal" role="form">
+				<div class="modal-dialog" style="width: <#if (baseColumns?size)?default(0) gt 8>820<#else>600</#if>px">
+					<div class="modal-content">
+						<div class="modal-header">
+							<h5 class="modal-title" id="exampleModalLabel" style="float:left;">增改信息</h5>
+							<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+								<span aria-hidden="true">&times;</span>
+							</button>
+						</div>
+
+						<div class="modal-body">
+						    <!-- 主键隐藏 -->
+                            <#if (keyColumn?size)?default(0) gt 0>
+                                <#list keyColumn as k>
+                            <input class="form-control" type="hidden" id="${(k.javaProperty)?default('')}" name="${(k.javaProperty)?default('')}" />
+                                </#list>
+                            </#if>
+
+							<#if (baseColumns?size)?default(0) gt 8>
+							<!-- 双行展示 -->
+							<#list baseColumns as b>
+							<#if b_index?default(0) % 2 == 0>
+							<div class="form-group">
+                                <label for="${(b.javaProperty)?default('')}" class="col-sm-2 control-label">${(b.remarks)?default('')}：</label>
+                                <div class="col-md-3">
+                                    <input class="form-control" type="text" id="${(b.javaProperty)?default('')}" name="${(b.javaProperty)?default('')}" placeholder="请输入${(b.remarks)?default('')}"/>
+                                </div>
+							</#if>
+							<#if b_index?default(0) % 2 == 1>
+                                <label for="${(b.javaProperty)?default('')}" class="col-sm-3 control-label">${(b.remarks)?default('')}：</label>
+                                <div class="col-md-3">
+                                    <input class="form-control" type="text" id="${(b.javaProperty)?default('')}" name="${(b.javaProperty)?default('')}" placeholder="请输入${(b.remarks)?default('')}"/>
+                                </div>
+							</div>
+							</#if>
+							</#list>
+
+							<#else>
+							<!-- 单行展示 -->
+							<#list baseColumns as b>
+							<div class="form-group">
+								<label for="${(b.javaProperty)?default('')}" class="col-sm-3 control-label">${(b.remarks)?default('')}：</label>
+								<div class="col-sm-8">
+									<input type="text" class="form-control" id="${(b.javaProperty)?default('')}" name="${(b.javaProperty)?default('')}" placeholder="请输入${(b.remarks)?default('')}">
+								</div>
+							</div>
+							</#list>
+							</#if>
+						</div>
+
+						<div class="modal-footer">
+							<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
+							<button type="button" class="btn btn-primary" onclick="subInfo()">提交</button>
+						</div>
+					</div>
+					<!-- /.modal-content -->
+				</div>
+				<!-- /.modal -->
+			</form>
+		</div>
+
+        <script>
+            var baseOrgCd = "${r"${prefix_orgCd?default('')}"}";
+            var basePath = "${r"${basePath?default('')}"}";
+            var currentMenuCd = "${r"${RequestParameters.menucd?default('')}"}";
+        </script>
+
+        <script src="${r"${basePath}"}/static/third/js/jquery.min.js"></script>
+        <script src="${r"${basePath}"}/static/third/bootstrap/bootstrap-3.3.7-dist/js/bootstrap.js" type="text/javascript"></script>
+        <script src="${r"${basePath}"}/static/third/bootstrap/bootstrap-table-master/dist/bootstrap-table.js" type="text/javascript"></script>
+        <script src="${r"${basePath}"}/static/third/bootstrap/bootstrap-table-master/dist/extensions/fixed-columns/bootstrap-table-fixed-columns.js" type="text/javascript"></script>
+        <script src="${r"${basePath}"}/static/third/bootstrap/bootstrap-table-master/dist/extensions/editable/bootstrap-table-editable.js" type="text/javascript"></script>
+        <script src="${r"${basePath}"}/static/third/bootstrap/bootstrap-table-master/dist/locale/bootstrap-table-zh-CN.js" type="text/javascript"></script>
+
+        <!-- 页面Js文件的引用 -->
+        <script src="${r"${basePath}"}/static/${r"${"}(prefix_orgLayoutLib)?default('')${r"}"}/js/common/addBtn.js" type="text/javascript"></script>
+        <script src="${r"${basePath}"}/static/${r"${"}(prefix_orgLayoutLib)?default('')${r"}"}/js/${modelClassName?default('')?lower_case}/manager.js" type="text/javascript"></script>
+	</body>
+</html>
+</#if>

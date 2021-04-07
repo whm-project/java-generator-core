@@ -16,8 +16,10 @@
         <plugin type="org.mybatis.generator.plugins.ToStringPlugin"/>
         <plugin type="org.mybatis.generator.plugins.SqlMapConfigPlugin"/>
 
-        <!--<plugin type="org.mybatis.generator.plugins.MapperPlugin">-->
-        <!--</plugin>-->
+        <!-- dao层继承类 -->
+        <plugin type="tk.mybatis.mapper.generator.MapperPlugin">
+            <property name="mappers" value="com.my.base.BaseDao"/>
+        </plugin>
 
         <commentGenerator type="tk.mybatis.mapper.generator.MapperCommentGenerator">
             <property name="suppressDate" value="true" />
@@ -25,28 +27,24 @@
             <property name="addRemarkComments" value="true" />
         </commentGenerator>
         <jdbcConnection driverClass="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-                        connectionURL="jdbc:sqlserver://192.168.1.199:1433;DatabaseName=water_survey"
+                        connectionURL="jdbc:sqlserver://192.168.1.199:1433;DatabaseName=ncgs"
                         userId="hykj"
                         password="hykj" />
         <javaTypeResolver>
             <property name="forceBigDecimals" value="false"/>
         </javaTypeResolver>
-        <javaModelGenerator targetPackage="com.my.business.model" targetProject="java-generator-core/src/main/java">
-            <property name="enableSubPackages" value="true" />
-            <property name="trimStrings" value="true" />
-        </javaModelGenerator>
+        <javaModelGenerator targetPackage="com.my.business.model" targetProject="java-generator-core/src/main/java" />
 
-        <sqlMapGenerator targetPackage="com.my.business.mapper" targetProject="java-generator-core/src/main/java">
-            <property name="enableSubPackages" value="true" />
-        </sqlMapGenerator>
-        <javaClientGenerator targetPackage="com.my.business.mapper" targetProject="java-generator-core/src/main/java" type="XMLMAPPER">
+        <sqlMapGenerator targetPackage="com.my.business.mapper" targetProject="java-generator-core/src/main/java" />
+
+        <javaClientGenerator targetPackage="com.my.business.dao" targetProject="java-generator-core/src/main/java" type="XMLMAPPER">
             <property name="enableSubPackages" value="true" />
         </javaClientGenerator>
 
-        <javaQueryModelGenerator targetPackage="com.my.business.model.querymodel" targetProject="java-generator-core/src/main/java">
-            <property name="enableSubPackages" value="true" />
-            <property name="queryRootClass" value="com.my.business.base.BaseQueryModel"/>
-        </javaQueryModelGenerator>
+        <!--<javaQueryModelGenerator targetPackage="com.my.business.model.querymodel" targetProject="java-generator-core/src/main/java">-->
+            <!--<property name="enableSubPackages" value="true" />-->
+            <!--<property name="queryRootClass" value="com.my.business.base.BaseQueryModel"/>-->
+        <!--</javaQueryModelGenerator>-->
 
         <javaControllerGenerator targetPackage="com.my.business.controller" targetProject="java-generator-core/src/main/java">
             <property name="enableSubPackages" value="true" />
@@ -57,13 +55,26 @@
 
         <javaServiceGenerator targetPackage="com.my.business.service" targetProject="java-generator-core/src/main/java">
             <property name="enableSubPackages" value="true" />
+            <property name="rootClass" value="com.my.base.BaseService"/>
         </javaServiceGenerator>
         <javaSerivceImplGenerator targetPackage="com.my.business.service.impl" targetProject="java-generator-core/src/main/java">
             <property name="enableSubPackages" value="true" />
+            <property name="rootClass" value="com.my.base.BaseServiceImpl"/>
         </javaSerivceImplGenerator>
 
-        <table tableName="hy_qsk_datatiming">
-            <generatedKey column="ID" sqlStatement="Sqlserver"/>
+        <pageGenerator targetPackage="com.my.business.page" targetProject="java-generator-core/src/main/java"></pageGenerator>
+
+        <!--<table tableName="strut">-->
+        <!--<treeStructure selfCdColumn="STRUT_CD" selfNmColumn="STRUT_NM" superCdColumn="SP_STRUT_CD" treeIndexColumn="STRUT_CD_INDEX" treeNmIndexColumn="STRUT_NM_INDEX" isParentColumn="STRUT_ISPARENT"></treeStructure>-->
+        <!--<checkUnique uniqueColumnAry="STRUT_CD"></checkUnique>-->
+        <!--</table>-->
+        <!--<table tableName="wr_adma_b">-->
+        <!--<treeStructure selfCdColumn="ORG_CD" superCdColumn="ENG_MAN_CD" treeIndexColumn="ORG_INDEX"></treeStructure>-->
+        <!--</table>-->
+        <!--<table tableName="unit"></table>-->
+        <table tableName="hy_sys_t_menu">
+            <treeStructure selfCdColumn="MENU_CD" selfNmColumn="MENU_NM" superCdColumn="SUP_MENU_CD" treeIndexColumn="MENU_INDEX" isParentColumn="ISPARENT"></treeStructure>
+            <checkUnique uniqueColumnAry="MENU_CD"></checkUnique>
         </table>
     </context>
 </generatorConfiguration>

@@ -60,7 +60,8 @@
           tables.
         -->
         <!ELEMENT context (property*, plugin*, commentGenerator?, (connectionFactory | jdbcConnection), javaTypeResolver?
-                ,javaModelGenerator, sqlMapGenerator?, javaClientGenerator?,javaViewModelGenerator?,javaQueryModelGenerator?,javaDomainGenerator?,javaControllerGenerator?,javaServiceGenerator?,javaSerivceImplGenerator?, table+)>
+                ,javaModelGenerator, sqlMapGenerator?, javaClientGenerator?,javaViewModelGenerator?,javaQueryModelGenerator?
+                ,javaDomainGenerator?,javaControllerGenerator?,javaServiceGenerator?,javaSerivceImplGenerator?,pageGenerator?, table+)>
         <!ATTLIST context id ID #REQUIRED
                 defaultModelType CDATA #IMPLIED
                 targetRuntime CDATA #IMPLIED
@@ -185,6 +186,11 @@
         <!ATTLIST javaSerivceImplGenerator
                 targetPackage CDATA #REQUIRED
                 targetProject CDATA #REQUIRED>
+
+        <!ELEMENT pageGenerator (property*)>
+        <!ATTLIST pageGenerator
+                targetPackage CDATA #REQUIRED
+                targetProject CDATA #REQUIRED>
         <!--
           The table element is used to specify a database table that will be the source information
           for a set of generated objects.
@@ -224,8 +230,10 @@
         <!ELEMENT treeStructure EMPTY>
         <!ATTLIST treeStructure
                 selfCdColumn CDATA #REQUIRED
+                selfNmColumn CDATA #REQUIRED
                 superCdColumn CDATA #REQUIRED
                 treeIndexColumn CDATA #IMPLIED
+                treeNmIndexColumn CDATA #IMPLIED
                 isParentColumn CDATA #IMPLIED>
 
         <!--

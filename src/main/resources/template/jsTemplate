@@ -1,0 +1,515 @@
+<#if treeStructure?default('') != ''>
+<!-- 树形表 -->
+var newSupStrutCd = "";
+var oldSupStrutCd = "";
+
+//ztree设置
+var setting = {
+    view: {
+        addHoverDom: addHoverDom,
+        removeHoverDom: removeHoverDom,
+        selectedMulti: false,
+        fontCss: getFontCss,
+        addDiyDom: addDiyDom
+    },
+    data: {
+        key: {
+            name:"${treeStructure.selfNmPropertyName?default('')}",
+            title:"${treeStructure.selfCdPropertyName?default('')}"
+        }
+    },
+    async: {
+        enable: true,
+        url: basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/getChild${modelClassName?default('')}",
+        autoParam:["${treeStructure.selfCdPropertyName?default('')}=${treeStructure.superCdPropertyName?default('')}"],
+        dataFilter: ajaxDataFilter
+    },
+    callback: {
+        onAsyncError: onAsyncError
+    }
+};
+
+//初始化
+var zTree;
+$(function(){
+    var treeObj = $("#ztree_ul");
+    $.fn.zTree.init(treeObj, setting);
+    zTree = $.fn.zTree.getZTreeObj("ztree_ul");
+});
+
+//在节点上固定显示自定义控件
+function addDiyDom(treeId, treeNode) {
+    var spaceWidth = 5;
+    var switchObj = $("#" + treeNode.tId + "_switch"), icoObj = $("#" + treeNode.tId + "_ico");
+    switchObj.remove();
+    icoObj.before(switchObj);
+
+    if (treeNode.level > 1) {
+        var spaceStr = "<span style='display: inline-block;width:" + (spaceWidth * treeNode.level)+ "px'></span>";
+        switchObj.before(spaceStr);
+    }
+}
+
+//加载失败
+function onAsyncError(event, treeId, treeNode, XMLHttpRequest, textStatus, errorThrown) {
+    alert("加载失败，请重试！");
+}
+
+//异步请求完，添加节点时，先进行过滤
+function ajaxDataFilter(treeId, parentNode, childNodes){
+    if (!childNodes) return null;
+    for (var i=0; i<childNodes.length; i++) {
+        //设置是否是父级节点
+        if(childNodes[i].${treeStructure.isParentPropertyName?default('')} == "1"){
+            childNodes[i].isParent = true;
+        }else{
+            childNodes[i].isParent = false;
+        }
+    }
+    return childNodes;
+}
+
+//添加鼠标移动上去的样式
+function addHoverDom(treeId, treeNode) {
+    var sObj = $("#" + treeNode.tId + "_span");
+    if (treeNode.editNameFlag || $("#addBtn_"+treeNode.tId).length>0 || $("#editBtn_"+treeNode.tId).length>0 || $("#removeBtn_"+treeNode.tId).length>0) return;
+
+    //新增
+    var addStr = "<span class='button add' id='addBtn_" + treeNode.tId + "' title='add node' onfocus='this.blur();'></span>";
+    //编辑
+    var editStr = "<span class='button edit' id='editBtn_" + treeNode.tId + "' title='edit node' onfocus='this.blur();'></span>";
+    //删除
+    var removeStr = "<span class='button remove' id='removeBtn_" + treeNode.tId + "' title='remove node' onfocus='this.blur();'></span>";
+
+    //追加按钮
+    if(treeNode.level == 0){
+        sObj.after(editStr).after(addStr);
+    }else{
+        sObj.after(removeStr).after(editStr).after(addStr);
+    }
+
+    //新增绑定操作
+    var btn_add = $("#addBtn_"+treeNode.tId);
+    if (btn_add) btn_add.bind("click", function(){
+        addTreeNode(treeNode)
+        return false;
+    });
+
+    //编辑绑定操作
+    var btn_edit = $("#editBtn_"+treeNode.tId);
+    if(btn_edit) btn_edit.bind("click", function(){
+        editTreeNode(treeNode)
+    });
+
+    //移除绑定操作
+    var btn_remove = $("#removeBtn_"+treeNode.tId);
+    if(btn_remove) btn_remove.bind("click", function(){
+        removeTreeNode(treeNode)
+    });
+};
+
+//添加鼠标移出的样式
+function removeHoverDom(treeId, treeNode) {
+    $("#addBtn_"+treeNode.tId).unbind().remove();
+    $("#editBtn_"+treeNode.tId).unbind().remove();
+    $("#removeBtn_"+treeNode.tId).unbind().remove();
+};
+
+//添加节点
+function addTreeNode(parentNode){
+    // 设置右边内容
+    <#if (keyColumn?size)?default(0) gt 0>
+        <#list keyColumn as k>
+    $("#${k.javaProperty?default('')}").val("");
+        </#list>
+    </#if>
+    <#list baseColumns as b>
+    $("#${(b.javaProperty)?default('')}").val("");
+    </#list>
+    $("#${treeStructure.superCdPropertyName?default('')}").val(parentNode.${treeStructure.selfCdPropertyName?default('')});
+}
+
+//点击节点
+function zTreeOnClick(event, treeId, treeNode){
+    if(treeNode.orgCd != "root"){
+        editTreeNode(treeNode);
+    }
+}
+
+//编辑节点
+function editTreeNode(treeNode) {
+    // 设置右边内容
+    <#if (keyColumn?size)?default(0) gt 0>
+        <#list keyColumn as k>
+    $("#${k.javaProperty?default('')}").val(treeNode.${k.javaProperty?default('')});
+        </#list>
+    </#if>
+    <#list baseColumns as b>
+    $("#${(b.javaProperty)?default('')}").val(treeNode.${(b.javaProperty)?default('')});
+    </#list>
+    oldSupStrutCd = treeNode.${treeStructure.superCdPropertyName?default('')};
+}
+
+//更新父节点信息，增量
+function parentNodeUpdate_increment(ztree, parentNode){
+    parentNode.isParent = true;
+
+    //刷新父节点的子节点
+    ztree.reAsyncChildNodesPromise(parentNode, "refresh", false);
+}
+
+//更新父节点信息，维护
+function parentNodeUpdate_maintain(ztree, parentNode) {
+    //判断父节点下有没有子节点
+    var childNodes = ztree.getNodesByParam("${treeStructure.superCdPropertyName?default('')}", parentNode.${treeStructure.selfCdPropertyName?default('')}, null);
+    if (childNodes.length > 0) {
+        parentNode.isParent = true;
+    } else {
+        parentNode.isParent = false;
+    }
+
+    //刷新父节点的子节点
+    ztree.reAsyncChildNodesPromise(parentNode, "refresh", false);
+}
+
+//删除节点
+function removeTreeNode(treeNode){
+    //如果是root节点，不能删除
+    if(treeNode.level == "0"){
+        alert("根节点不能进行此操作！");
+    }
+    //不是root节点，提示判断是不是有子节点，如果有，confirm
+    else if(treeNode.isParent){
+        var msg = "要删除的节点是父节点，如果删除将连同子节点一起删掉。\n\n请确认！";
+        if(confirm(msg)){
+            //调用后台接口，设置为删除状态
+            ajaxDelNode(treeNode);
+        }
+    }
+    //不是根节点
+    else{
+        if(confirm("是否确定删除？")){
+            //调用后台接口，设置为删除状态
+            ajaxDelNode(treeNode);
+        }
+    }
+}
+
+//ajax调用接口删除节点
+function ajaxDelNode(delNode){
+    $.ajax({
+        type:"get",
+        url:basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/delete${modelClassName}_physics",
+        data:{<#list keyColumn as k>"${k.javaProperty?default('')}":delNode.${k.javaProperty?default('')}<#if k_has_next>,</#if></#list>},
+        success:function(checkResult){
+            if(checkResult.state == 1){
+                //移除删除的节点
+                var delNodeList = zTree.getNodesByParamFuzzy("${treeStructure.treeIndexPropertyName?default('')}", delNode.${treeStructure.selfCdPropertyName?default('')}, null);
+                for(var i=0; i<delNodeList.length; i++){
+                    zTree.removeNode(delNodeList[i]);
+
+                    //更新父节点信息
+                    var parentNode =  zTree.getNodesByParam("${treeStructure.selfCdPropertyName?default('')}", delNodeList[i].${treeStructure.superCdPropertyName?default('')}, null)[0];
+                    parentNodeUpdate_maintain(zTree, parentNode);
+                }
+                alert("删除成功！");
+            }
+            else{
+                alert(checkResult.msg);
+            }
+        }
+    })
+}
+
+<#list checkUniqueList as c>
+    <#if c.uniquePropertyNameList[0] != "">
+//验证唯一性
+function check<#list c.uniquePropertyNameList as upn>${upn?cap_first}<#if upn_has_next>AND</#if></#list>(){
+    $.ajax({
+        type:"get",
+        url: basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/check<#list c.uniquePropertyNameList as upn>${upn?default('')?cap_first}<#if upn_has_next>AND</#if></#list>",
+        data:{<#list c.uniquePropertyNameList as upn>${upn?default('')}:$("#${upn?default('')}").val()<#if upn_has_next>,</#if></#list>},
+        success: function(checkResult) {
+            if (checkResult.state == 0) {
+                alert(checkResult.msg);
+            }
+        }
+    })
+}
+
+    </#if>
+</#list>
+//提交增改
+function subInfo(){
+    newSupStrutCd = $("#${treeStructure.superCdPropertyName?default('')}").val();
+    //如果有主键信息，要进行的是修改
+    <#if (keyColumn?size)?default(0) gt 0>
+    if(<#list keyColumn as k>$("#${k.javaProperty?default('')}").val().length > 0 <#if k_has_next>&& </#if></#list>){
+    </#if>
+        $.ajax({
+            type:"post",
+            url:basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/update${modelClassName}",
+            data:$("#infoForm").serialize(),
+            success:function(ref){
+                if(ref.state == 1){
+                    alert("保存成功！");
+
+                    //如果这次更新了上级组织机构
+                    if(newSupStrutCd != oldSupStrutCd){
+                        //重新加载上次的上级组织机构
+                        var oldParentNode = zTree.getNodesByParam("${treeStructure.selfCdPropertyName?default('')}", oldSupStrutCd, null)[0];
+                        //更新父节点信息
+                        parentNodeUpdate_maintain(zTree, oldParentNode);
+                    }
+
+                    //需重新加载这次的上级组织机构
+                    var parentNode = zTree.getNodesByParam("${treeStructure.selfCdPropertyName?default('')}", newSupStrutCd, null)[0];
+                    //更新父节点信息
+                    parentNodeUpdate_increment(zTree, parentNode);
+                }
+                else{
+                    alert("保存失败！");
+                }
+
+                // 关闭表单
+                $('#addDiv').modal('hide');
+                //刷新页面
+                searchInfo();
+            }
+        })
+    <#if (keyColumn?size)?default(0) gt 0>
+    }
+    //如果没有主键信息，要进行的是新增
+    else{
+        $.ajax({
+            type:"post",
+            url:basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/create${modelClassName}",
+            data:$("#infoForm").serialize(),
+            success:function(ref){
+                if(ref.state == 1){
+                    alert("保存成功！");
+
+                    //父节点信息
+                    var parentNode = zTree.getNodesByParam("${treeStructure.selfCdPropertyName?default('')}", newSupStrutCd, null)[0];
+                    //更新父节点信息
+                    parentNodeUpdate_increment(zTree, parentNode);
+                }
+                else{
+                    alert("保存失败！");
+                }
+
+                // 关闭表单
+                $('#addDiv').modal('hide');
+                //刷新页面
+                searchInfo();
+            }
+        })
+    }
+    </#if>
+}
+
+<#else>
+<!-- 非树形 -->
+//设置按钮
+setBtnDiv("searchDiv");
+var operationBtn = getOperationDivBtn();
+// 初始化表格
+searchInfo();
+
+//查询
+function searchInfo(){
+    $('#dataTable').bootstrapTable('destroy');
+    $('#dataTable').bootstrapTable({
+        url: basePath + '/' + baseOrgCd + '/${requestUrl?default('')}/page${modelClassName?default('')}',         //请求后台的URL（*）
+        method: 'get',                      //请求方式（*）
+        silent: true,                       //记忆排序选项
+        dataField: 'data',
+        totalField: 'count',
+        striped: true,                      //是否显示行间隔色
+        cache: false,                       //是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+        pagination: true,                   //是否显示分页（*）
+        paginationShowPageGo: true,
+        showJumpto: true,
+        contentType: 'application/x-www-form-urlencoded',
+        queryParams: setQueryParams,         //传递参数（*）
+        sidePagination: "server",          //分页方式：client客户端分页，server服务端分页（*）
+        pageNumber:1,                        //初始化加载第一页，默认第一页
+        pageSize: 10,                        //每页的记录行数（*）
+        pageList: [10, 25, 50],              //可供选择的每页的行数（*）
+        showRefresh: false,                 //是否显示刷新按钮
+        showToggle: false,
+        uniqueId: "ID",                     //每一行的唯一标识，一般为主键列
+
+        fixedColumns:true,
+        fixedNumber:1,
+        fixedRightNumber:1,
+        columns: [
+			<#list baseColumns as b>
+		{
+            field: '${(b.javaProperty)?default('')}',
+            title: '${(b.remarks)?default('')}',
+            sortable: true,                     //是否启用排序
+            sortName: '${(b.javaProperty)?default('')}',
+            rememberOrder: true
+        },
+			</#list>
+		{
+            field: 'operation',
+            title: '操作',
+            formatter : function(value,row,index){
+                var trHtmlStr = "";
+                for(var j=0; j<operationBtn.length; j++){
+                    trHtmlStr +=  "<button type='button' class='btn btn-primary btn-xs' style='padding:1px 5px;' onclick='"+ operationBtn[j].menuOther1 +"("+ row.id +")'>" + operationBtn[j].menuNm + "</button> ";
+                }
+                return trHtmlStr;
+            }
+        }]
+    });
+}
+
+//得到查询的参数
+function setQueryParams(params) {
+    var temp = {   //这里的键的名字和控制器的变量名必须一直，这边改动，控制器也需要改成一样的
+        "pageSize": params.limit,   //页面大小
+        "pageNumber": (params.offset / params.limit) +1,  //页码
+		<#list baseColumns as b>
+        //${(b.remarks)?default('')}
+        "${(b.javaProperty)?default('')}": $("#search_${(b.javaProperty)?default('')}").val()<#if b_has_next>, </#if>
+		</#list>
+    };
+    if(typeof(params.sort) != 'undefined'){
+        temp.order = params.sort + " " + params.order;
+    }
+    return temp;
+}
+
+//编辑
+function editInfo(<#if (keyColumn?size)?default(0) gt 0><#list keyColumn as k>${k.javaProperty?default('')}<#if k_has_next>, </#if></#list></#if>){
+    $.ajax({
+        type:"post",
+        url:basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/get${modelClassName?default('')}",
+        data:
+		{
+		 <#if (keyColumn?size)?default(0) gt 0>
+			<#list keyColumn as k>
+			"${k.javaProperty?default('')}":${k.javaProperty?default('')}<#if k_has_next>, </#if>
+			</#list>
+		 </#if>
+		},
+        success:function(ref){
+            if(ref.state == "1"){
+                <#if (keyColumn?size)?default(0) gt 0>
+                    <#list keyColumn as k>
+                $("#${(k.javaProperty)?default('')}").val(ref.data.${(k.javaProperty)?default('')});
+                    </#list>
+                </#if>
+				<#list baseColumns as b>
+				$("#${(b.javaProperty)?default('')}").val(ref.data.${(b.javaProperty)?default('')});
+				</#list>
+				$("#exampleModalLabel").html("编辑信息");
+				$('#addDiv').modal('show');
+            }
+            else{
+                alert(ref.msg);
+            }
+        }
+    })
+}
+
+//新增
+function addInfo(){
+	<#list baseColumns as b>
+	$("#${(b.javaProperty)?default('')}").val("");
+	</#list>
+    $("#exampleModalLabel").html("新增信息");
+    $('#addDiv').modal('show');
+}
+
+<#list checkUniqueList as c>
+    <#if c.uniquePropertyNameList[0] != "">
+//验证唯一性
+function check<#list c.uniquePropertyNameList as upn>${upn?cap_first}<#if upn_has_next>AND</#if></#list>(){
+    $.ajax({
+        type:"get",
+        url: basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/check<#list c.uniquePropertyNameList as upn>${upn?default('')?cap_first}<#if upn_has_next>AND</#if></#list>",
+        data:{<#list c.uniquePropertyNameList as upn>${upn?default('')?cap_first}:$("#${upn?default('')}").val()<#if upn_has_next>,</#if></#list>},
+        success: function(checkResult) {
+            if (checkResult.state == 0) {
+                alert(checkResult.msg);
+            }
+        }
+    })
+}
+
+    </#if>
+</#list>
+//提交增改
+function subInfo(){
+    //如果有主键信息，要进行的是修改
+    <#if (keyColumn?size)?default(0) gt 0>
+    if(<#list keyColumn as k>$("#${k.javaProperty?default('')}").val().length > 0 <#if k_has_next>&& </#if></#list>){
+    </#if>
+        $.ajax({
+            type:"post",
+            url:basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/update${modelClassName}",
+            data:$("#infoForm").serialize(),
+            success:function(ref){
+                if(ref.state == 1){
+                    alert("保存成功！");
+                }
+                else{
+                    alert("保存失败！");
+                }
+
+                // 关闭表单
+                $('#addDiv').modal('hide');
+                //刷新页面
+                searchInfo();
+            }
+        })
+    <#if (keyColumn?size)?default(0) gt 0>
+    }
+    //如果没有主键信息，要进行的是新增
+    else{
+        $.ajax({
+            type:"post",
+            url:basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/create${modelClassName}",
+            data:$("#infoForm").serialize(),
+            success:function(ref){
+                if(ref.state == 1){
+                    alert("保存成功！");
+                }
+                else{
+                    alert("保存失败！");
+                }
+
+                // 关闭表单
+                $('#addDiv').modal('hide');
+                //刷新页面
+                searchInfo();
+            }
+        })
+    }
+    </#if>
+}
+
+//删除
+function delInfo(<#if (keyColumn?size)?default(0) gt 0><#list keyColumn as k>${k.javaProperty?default('')}<#if k_has_next>, </#if></#list></#if>){
+    if(confirm("确定删除吗？")){
+        $.ajax({
+            type:"get",
+            url:basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/delete${modelClassName}_physics",
+            data:{<#list keyColumn as k>"${k.javaProperty?default('')}":${k.javaProperty?default('')}<#if k_has_next>,</#if></#list>},
+            success:function(ref){
+                if(ref.state == "1"){
+                    alert("删除成功！");
+                    //刷新页面
+                    searchInfo();
+                }else{
+                    alert("删除失败！");
+                }
+            }
+        })
+    }
+}
+</#if>

@@ -105,6 +105,9 @@ public class TableConfiguration extends PropertyHolder {
 
     /** The controller object name. */
     private String controllerObjectName;
+
+    /** The page object name. */
+    private String pageObjectName;
     
     /** The alias. */
     private String alias;
@@ -587,6 +590,14 @@ public class TableConfiguration extends PropertyHolder {
 
     public void setControllerObjectName(String controllerObjectName) {
         this.controllerObjectName = controllerObjectName;
+    }
+
+    public String getPageObjectName() {
+        return pageObjectName;
+    }
+
+    public void setPageObjectName(String pageObjectName) {
+        this.pageObjectName = pageObjectName;
     }
 
     /**

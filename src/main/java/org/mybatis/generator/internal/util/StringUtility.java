@@ -102,4 +102,17 @@ public class StringUtility {
 
         return s.indexOf('%') != -1 || s.indexOf('_') != -1;
     }
+
+    public static String notNull(Object object) {
+        try {
+            String resultStr = (String)object;
+            if (null == resultStr) {
+                resultStr = "";
+            }
+
+            return resultStr;
+        } catch (Exception var2) {
+            return "";
+        }
+    }
 }

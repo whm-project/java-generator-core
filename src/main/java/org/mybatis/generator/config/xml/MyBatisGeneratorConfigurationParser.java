@@ -196,6 +196,9 @@ public class MyBatisGeneratorConfigurationParser {
             }
             else if ("javaSerivceImplGenerator".equals(childNode.getNodeName())) { //$NON-NLS-1$
                 parseJavaServiceImplGenerator(context, childNode);
+            }
+            else if ("pageGenerator".equals(childNode.getNodeName())) { //$NON-NLS-1$
+                parsePageGenerator(context, childNode);
             }else if ("table".equals(childNode.getNodeName())) { //$NON-NLS-1$
                 parseTable(context, childNode);
             }
@@ -442,13 +445,18 @@ public class MyBatisGeneratorConfigurationParser {
     private void parseTreeStructure(TableConfiguration tc, Node node) {
         Properties attributes = parseAttributes(node);
         String selfCdColumn = attributes.getProperty("selfCdColumn"); //$NON-NLS-1$
+        String selfNmColumn = attributes.getProperty("selfNmColumn"); //$NON-NLS-1$
         String superCdColumn = attributes.getProperty("superCdColumn"); //$NON-NLS-1$
 
-        TreeStructure treeStructure = new TreeStructure(selfCdColumn, superCdColumn);
+        TreeStructure treeStructure = new TreeStructure(selfCdColumn, selfNmColumn, superCdColumn);
 
         String treeIndexColumn = attributes.getProperty("treeIndexColumn"); //$NON-NLS-1$
         if (stringHasValue(treeIndexColumn)) {
             treeStructure.setTreeIndexColumnName(treeIndexColumn);
+        }
+        String treeNmIndexColumn = attributes.getProperty("treeNmIndexColumn"); //$NON-NLS-1$
+        if (stringHasValue(treeNmIndexColumn)) {
+            treeStructure.setTreeNmIndexColumnName(treeNmIndexColumn);
         }
         String isParent = attributes.getProperty("isParentColumn"); //$NON-NLS-1$
         if (stringHasValue(isParent)) {
@@ -838,7 +846,6 @@ public class MyBatisGeneratorConfigurationParser {
         context.setJavaServiceImplGeneratorConfiguration(javaServiceImplGeneratorConfiguration);
 
         Properties attributes = parseAttributes(node);
-        String type = attributes.getProperty("type"); //$NON-NLS-1$
         String targetPackage = attributes.getProperty("targetPackage"); //$NON-NLS-1$
         String targetProject = attributes.getProperty("targetProject"); //$NON-NLS-1$
 
@@ -855,6 +862,32 @@ public class MyBatisGeneratorConfigurationParser {
 
             if ("property".equals(childNode.getNodeName())) { //$NON-NLS-1$
                 parseProperty(javaServiceImplGeneratorConfiguration, childNode);
+            }
+        }
+    }
+
+    protected void parsePageGenerator(Context context, Node node) {
+        PageGeneratorConfiguration pageGeneratorConfiguration = new PageGeneratorConfiguration();
+
+        context.setPageGeneratorConfiguration(pageGeneratorConfiguration);
+
+        Properties attributes = parseAttributes(node);
+        String targetPackage = attributes.getProperty("targetPackage"); //$NON-NLS-1$
+        String targetProject = attributes.getProperty("targetProject"); //$NON-NLS-1$
+
+        pageGeneratorConfiguration.setTargetPackage(targetPackage);
+        pageGeneratorConfiguration.setTargetProject(targetProject);
+
+        NodeList nodeList = node.getChildNodes();
+        for (int i = 0; i < nodeList.getLength(); i++) {
+            Node childNode = nodeList.item(i);
+
+            if (childNode.getNodeType() != Node.ELEMENT_NODE) {
+                continue;
+            }
+
+            if ("property".equals(childNode.getNodeName())) { //$NON-NLS-1$
+                parseProperty(pageGeneratorConfiguration, childNode);
             }
         }
     }

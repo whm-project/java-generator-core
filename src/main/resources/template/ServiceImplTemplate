@@ -49,6 +49,8 @@ public class ${className} extends BaseServiceImpl<${modelClazz}> implements ${se
         
         //本级cd
         String selfCd  = ${modelClazz?uncap_first}.get${treeStructure.selfCdPropertyName?cap_first}();
+        //本级Nm
+        String selfNm  = ${modelClazz?uncap_first}.get${treeStructure.selfNmPropertyName?cap_first}();
         //上级cd
         String superCd = ${modelClazz?uncap_first}.get${treeStructure.superCdPropertyName?cap_first}();
         //获取上级记录
@@ -58,7 +60,19 @@ public class ${className} extends BaseServiceImpl<${modelClazz}> implements ${se
         //设置index
         if(super${modelClazz?uncap_first} != null){
             String superIndex = super${modelClazz?uncap_first}.get${treeStructure.treeIndexPropertyName?cap_first}();
-            ${modelClazz?uncap_first}.set${treeStructure.treeIndexPropertyName?cap_first}(superIndex + selfCd);
+            ${modelClazz?uncap_first}.set${treeStructure.treeIndexPropertyName?cap_first}(superIndex + "_" + selfCd);
+        }else{
+            ${modelClazz?uncap_first}.set${treeStructure.treeIndexPropertyName?cap_first}(selfCd);
+        }
+        </#if>
+        <#if (treeStructure.treeNmIndexPropertyName)?default('') != ''>
+
+        //设置index
+        if(super${modelClazz?uncap_first} != null){
+            String superNmIndex = super${modelClazz?uncap_first}.get${treeStructure.treeNmIndexPropertyName?cap_first}();
+            ${modelClazz?uncap_first}.set${treeStructure.treeNmIndexPropertyName?cap_first}(superNmIndex + "_" + selfNm);
+        }else{
+            ${modelClazz?uncap_first}.set${treeStructure.treeNmIndexPropertyName?cap_first}(selfNm);
         }
         </#if>
         
@@ -108,13 +122,41 @@ public class ${className} extends BaseServiceImpl<${modelClazz}> implements ${se
     public int save(${modelClazz} ${modelClazz?uncap_first}) {
         int result = 0;
 
+        <#if (treeStructure.isParentPropertyName)?default('') != ''>
         //设置自己不是父节点
         ${modelClazz?uncap_first}.set${treeStructure.isParentPropertyName?cap_first}((short)0);
+        </#if>
+
+        //获取上级记录
+        ${modelClazz} super${modelClazz?uncap_first} = getByUniqueKey("${treeStructure.selfCdPropertyName}", ${modelClazz?uncap_first}.get${((treeStructure.superCdPropertyName)?default(''))?cap_first}(), ${modelClazz}.class);
+        <#if (treeStructure.treeIndexPropertyName)?default('') != ''>
+
+        //设置index
+        if(super${modelClazz?uncap_first} != null){
+            String superIndex = super${modelClazz?uncap_first}.get${treeStructure.treeIndexPropertyName?cap_first}();
+            ${modelClazz?uncap_first}.set${treeStructure.treeIndexPropertyName?cap_first}(superIndex + "_" + ${modelClazz?uncap_first}.get${(treeStructure.selfCdPropertyName)?cap_first}());
+        }else{
+            ${modelClazz?uncap_first}.set${treeStructure.treeIndexPropertyName?cap_first}(${modelClazz?uncap_first}.get${(treeStructure.selfCdPropertyName)?cap_first}());
+        }
+        </#if>
+        <#if (treeStructure.treeNmIndexPropertyName)?default('') != ''>
+
+        //设置index
+        if(super${modelClazz?uncap_first} != null){
+            String superNmIndex = super${modelClazz?uncap_first}.get${treeStructure.treeNmIndexPropertyName?cap_first}();
+            ${modelClazz?uncap_first}.set${treeStructure.treeNmIndexPropertyName?cap_first}(superNmIndex + "_" + ${modelClazz?uncap_first}.get${(treeStructure.selfNmPropertyName)?cap_first}());
+        }else{
+            ${modelClazz?uncap_first}.set${treeStructure.treeNmIndexPropertyName?cap_first}(${modelClazz?uncap_first}.get${(treeStructure.selfNmPropertyName)?cap_first}());
+        }
+        </#if>
+
         //保存节点信息
         result = ${mapperName}.insertSelective(${modelClazz?uncap_first});
 
+        <#if (treeStructure.isParentPropertyName)?default('') != ''>
         //设置上级记录isParent
         setIsParent(${modelClazz?uncap_first}.get${treeStructure.superCdPropertyName?cap_first}());
+        </#if>
 
         return result;
     }
@@ -132,8 +174,12 @@ public class ${className} extends BaseServiceImpl<${modelClazz}> implements ${se
         //如果没有子节点了，设置原父节点的isParent为0
         if(childList.size() <= 0){
             node.set${treeStructure.isParentPropertyName?cap_first}((short)0);
-            ${mapperName}.updateByPrimaryKeySelective(node);
         }
+        //有子节点，父节点的isParent为1
+        else{
+            node.set${treeStructure.isParentPropertyName?cap_first}((short)1);
+        }
+        ${mapperName}.updateByPrimaryKeySelective(node);
     }
     </#if>
 
@@ -147,7 +193,7 @@ public class ${className} extends BaseServiceImpl<${modelClazz}> implements ${se
         //直属下级的superCd应该改变
         ${modelClazz} updateSupercd_model = new ${modelClazz}();
         updateSupercd_model.set${treeStructure.superCdPropertyName?cap_first}(selfCd_new);
-        updateInfoSelective(updateSupercd_model, "${treeStructure.superCdPropertyName?cap_first}", selfCd_old, SearchTypeEnum.EQ.getValue(), ${modelClazz}.class);
+        updateInfoSelective(updateSupercd_model, "${treeStructure.superCdPropertyName}", selfCd_old, SearchTypeEnum.EQ.getValue(), ${modelClazz}.class);
         <#if (treeStructure.treeIndexPropertyName)?default('') != ''>
 
         //所有下级的index应该改变

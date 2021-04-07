@@ -35,6 +35,12 @@ public class TreeStructure extends PropertyHolder {
     /** The selfCd property name. */
     private String selfCdPropertyName;
 
+    /** The selfNm column name. */
+    private String selfNmColumnName;
+
+    /** The selfCd property name. */
+    private String selfNmPropertyName;
+
     /** The superCd column name. */
     private String superCdColumnName;
 
@@ -47,6 +53,12 @@ public class TreeStructure extends PropertyHolder {
     /** The treeIndex property name. */
     private String treeIndexPropertyName;
 
+    /** The treeIndex column name. */
+    private String treeNmIndexColumnName;
+
+    /** The treeIndex property name. */
+    private String treeNmIndexPropertyName;
+
     /** The isParent column name. */
     private String isParentColumnName;
 
@@ -56,11 +68,13 @@ public class TreeStructure extends PropertyHolder {
     /**
      *
      */
-    public TreeStructure(String selfCdColumnName, String superCdColumnName) {
+    public TreeStructure(String selfCdColumnName, String selfNmColumnName, String superCdColumnName) {
         super();
 
         this.selfCdColumnName = selfCdColumnName;
         this.selfCdPropertyName = JavaBeansUtil.getCamelCaseString(selfCdColumnName, false);
+        this.selfNmColumnName = selfNmColumnName;
+        this.selfNmPropertyName = JavaBeansUtil.getCamelCaseString(selfNmColumnName, false);
         this.superCdColumnName = superCdColumnName;
         this.superCdPropertyName = JavaBeansUtil.getCamelCaseString(superCdColumnName, false);
     }
@@ -68,15 +82,19 @@ public class TreeStructure extends PropertyHolder {
     /**
      *
      */
-    public TreeStructure(String selfCdColumnName, String superCdColumnName, String treeIndexColumnName, String isParentColumnName) {
+    public TreeStructure(String selfCdColumnName, String selfNmColumnName, String superCdColumnName, String treeIndexColumnName, String treeNmIndexColumnName, String isParentColumnName) {
         super();
 
         this.selfCdColumnName = selfCdColumnName;
         this.selfCdPropertyName = JavaBeansUtil.getCamelCaseString(selfCdColumnName, false);
+        this.selfNmColumnName = selfNmColumnName;
+        this.selfNmPropertyName = JavaBeansUtil.getCamelCaseString(selfNmColumnName, false);
         this.superCdColumnName = superCdColumnName;
         this.superCdPropertyName = JavaBeansUtil.getCamelCaseString(superCdColumnName, false);
         this.treeIndexColumnName = treeIndexColumnName;
         this.treeIndexPropertyName = JavaBeansUtil.getCamelCaseString(treeIndexColumnName, false);
+        this.treeNmIndexColumnName = treeNmIndexColumnName;
+        this.treeNmIndexColumnName = JavaBeansUtil.getCamelCaseString(treeNmIndexColumnName, false);
         this.isParentColumnName = isParentColumnName;
         this.isParentColumnName = JavaBeansUtil.getCamelCaseString(isParentColumnName, false);
     }
@@ -92,6 +110,19 @@ public class TreeStructure extends PropertyHolder {
 
     public String getSelfCdPropertyName() {
         return selfCdPropertyName;
+    }
+
+    public String getSelfNmColumnName() {
+        return selfNmColumnName;
+    }
+
+    public void setSelfNmColumnName(String selfNmColumnName) {
+        this.selfNmColumnName = selfNmColumnName;
+        this.selfNmPropertyName = JavaBeansUtil.getCamelCaseString(selfNmColumnName, false);
+    }
+
+    public String getSelfNmPropertyName() {
+        return selfNmPropertyName;
     }
 
     public String getSuperCdColumnName() {
@@ -120,6 +151,19 @@ public class TreeStructure extends PropertyHolder {
         return treeIndexPropertyName;
     }
 
+    public String getTreeNmIndexColumnName() {
+        return treeNmIndexColumnName;
+    }
+
+    public void setTreeNmIndexColumnName(String treeNmIndexColumnName) {
+        this.treeNmIndexColumnName = treeNmIndexColumnName;
+        this.treeNmIndexPropertyName = JavaBeansUtil.getCamelCaseString(treeNmIndexColumnName, false);
+    }
+
+    public String getTreeNmIndexPropertyName() {
+        return treeNmIndexPropertyName;
+    }
+
     public String getIsParentColumnName() {
         return isParentColumnName;
     }
@@ -142,10 +186,14 @@ public class TreeStructure extends PropertyHolder {
         XmlElement xmlElement = new XmlElement("checkUnique"); //$NON-NLS-1$
         xmlElement.addAttribute(new Attribute("selfCdColumnName", selfCdColumnName));
         xmlElement.addAttribute(new Attribute("selfCdPropertyName", selfCdPropertyName));
+        xmlElement.addAttribute(new Attribute("selfNmColumnName", selfNmColumnName));
+        xmlElement.addAttribute(new Attribute("selfNmPropertyName", selfNmPropertyName));
         xmlElement.addAttribute(new Attribute("superCdColumnName", superCdColumnName));
         xmlElement.addAttribute(new Attribute("superCdPropertyName", superCdPropertyName));
         xmlElement.addAttribute(new Attribute("treeIndexColumnName", treeIndexColumnName));
         xmlElement.addAttribute(new Attribute("treeIndexPropertyName", treeIndexPropertyName));
+        xmlElement.addAttribute(new Attribute("treeNmIndexColumnName", treeNmIndexColumnName));
+        xmlElement.addAttribute(new Attribute("treeNmIndexPropertyName", treeNmIndexPropertyName));
         xmlElement.addAttribute(new Attribute("isParentColumnName", isParentColumnName));
         xmlElement.addAttribute(new Attribute("isParentPropertyName", isParentPropertyName));
         addPropertyXmlElements(xmlElement);

@@ -1,5 +1,6 @@
 package org.mybatis.generator.codegen.freemarker.TemplateEntity;
 
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.config.CheckUnique;
 import org.mybatis.generator.config.DeleteAffectedTable;
 import org.mybatis.generator.config.DeleteStateColumn;
@@ -29,6 +30,7 @@ public class ControllerTemplateEntity implements TemplateEntity {
 
     private String modelClassName;//类名
     private List<String> keyColumn_javaProperty;//主键在实体类中的属性名
+    private List<IntrospectedColumn> baseColumns;//字段在实体类中的属性名
 
     private TreeStructure treeStructure;  //树结构
     private List<CheckUnique> checkUniqueList;  //检查唯一
@@ -41,6 +43,14 @@ public class ControllerTemplateEntity implements TemplateEntity {
 
     public void setKeyColumn_javaProperty(List<String> keyColumn_javaProperty) {
         this.keyColumn_javaProperty = keyColumn_javaProperty;
+    }
+
+    public List<IntrospectedColumn> getBaseColumns() {
+        return baseColumns;
+    }
+
+    public void setBaseColumns(List<IntrospectedColumn> baseColumns) {
+        this.baseColumns = baseColumns;
     }
 
     public String getControllerPackage() {

@@ -63,6 +63,8 @@ public class Context extends PropertyHolder {
 
     private JavaQueryModelGeneratorConfiguration javaQueryModelGeneratorConfiguration;
 
+    private PageGeneratorConfiguration pageGeneratorConfiguration;
+
     /**
      * The java model generator configuration.
      */
@@ -352,6 +354,14 @@ public class Context extends PropertyHolder {
 
     public JavaQueryModelGeneratorConfiguration getJavaQueryModelGeneratorConfiguration() {
         return javaQueryModelGeneratorConfiguration;
+    }
+
+    public void setPageGeneratorConfiguration(PageGeneratorConfiguration pageGeneratorConfiguration) {
+        this.pageGeneratorConfiguration = pageGeneratorConfiguration;
+    }
+
+    public PageGeneratorConfiguration getPageGeneratorConfiguration() {
+        return pageGeneratorConfiguration;
     }
 
     public void setJavaQueryModelGeneratorConfiguration(JavaQueryModelGeneratorConfiguration javaQueryModelGeneratorConfiguration) {
@@ -806,6 +816,7 @@ public class Context extends PropertyHolder {
                         .contextGenerateAdditionalXmlFiles(introspectedTable));
             }
         }
+        //queryModel
         if (introspectedTables != null && this.getJavaQueryModelGeneratorConfiguration() != null) {
             for (IntrospectedTable introspectedTable : introspectedTables) {
                 callback.checkCancel();

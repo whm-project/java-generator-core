@@ -33,7 +33,9 @@ import org.mybatis.generator.codegen.RootClassInfo;
 import org.mybatis.generator.codegen.freemarker.JavaControllerGenerator;
 import org.mybatis.generator.codegen.freemarker.JavaServiceGenerator;
 import org.mybatis.generator.codegen.freemarker.JavaServiceImplGenerator;
+import org.mybatis.generator.codegen.freemarker.PageGenerator;
 import org.mybatis.generator.codegen.freemarker.TemplateEntity.ControllerTemplateEntity;
+import org.mybatis.generator.codegen.freemarker.TemplateEntity.PageTemplateEntity;
 import org.mybatis.generator.codegen.freemarker.TemplateEntity.ServiceTemplateEntity;
 import org.mybatis.generator.codegen.freemarker.TemplateEntity.ServiceImplTemplateEntity;
 import org.mybatis.generator.config.*;
@@ -290,6 +292,10 @@ public class MyBatisGenerator {
 
                 JavaControllerGenerator.addJavaControllerGenerator(assignmentControllerTemplateEntity());
             }
+            if (c.getPageGeneratorConfiguration() != null) {
+
+                PageGenerator.addPageGenerator(assignmentPageTemplateEntity());
+            }
 
         }
 
@@ -510,7 +516,9 @@ public class MyBatisGenerator {
                 }
                 controllerTemplateEntity.setControllerPackage(jdc.getTargetPackage());
                 controllerTemplateEntity.setModelPackage(c.getJavaModelGeneratorConfiguration().getTargetPackage());
-                controllerTemplateEntity.setQueryModelPackage(c.getJavaQueryModelGeneratorConfiguration().getTargetPackage());
+                if(c.getJavaQueryModelGeneratorConfiguration() != null){
+                    controllerTemplateEntity.setQueryModelPackage(c.getJavaQueryModelGeneratorConfiguration().getTargetPackage());
+                }
                 controllerTemplateEntity.setModelServicePackage(c.getJavaServiceGeneratorConfiguration().getTargetPackage());
                 controllerTemplateEntity.setProjectTargetPackage(jdc.getTargetProject()+"/"+jdc.getTargetPackage().replaceAll("\\.","/")+"/");
                 controllerTemplateEntity.setRequestUrl(Character.toLowerCase(controllerObjectName.charAt(0)) + controllerObjectName.substring(1)+"*");
@@ -528,6 +536,9 @@ public class MyBatisGenerator {
                     keyColumn_javaProperty_firstUp.add(Character.toUpperCase(column.getJavaProperty().charAt(0)) + column.getJavaProperty().substring(1));
                 }
                 controllerTemplateEntity.setKeyColumn_javaProperty(keyColumn_javaProperty);
+
+                //这个表的所有字段
+                controllerTemplateEntity.setBaseColumns(introspectedTable.getBaseColumns());
 
                 //树结构
                 controllerTemplateEntity.setTreeStructure(t.getTreeStructure());
@@ -621,12 +632,14 @@ public class MyBatisGenerator {
                 }
                 //树结构
                 serviceImplTemplateEntity.setTreeStructure(t.getTreeStructure());
+
+
+                IntrospectedTable introspectedTable = c.getIntrospectedTables().get(i);
                 /**
                  * 这个表的所有主键（可能是组合主键，所以可能是多个）
                  */
                 List<String> keyColumn_javaProperty = new ArrayList<>();
                 List<String> keyColumn_javaProperty_firstUp = new ArrayList<>();
-                IntrospectedTable introspectedTable = c.getIntrospectedTables().get(i);
                 for (IntrospectedColumn column : introspectedTable.primaryKeyColumns) {
                     keyColumn_javaProperty.add(column.getJavaProperty());
                     keyColumn_javaProperty_firstUp.add(Character.toUpperCase(column.getJavaProperty().charAt(0)) + column.getJavaProperty().substring(1));
@@ -638,6 +651,58 @@ public class MyBatisGenerator {
             }
         }
         return serviceTemplateEntities;
+    }
+
+    /**
+     * 生成页面
+     * @return
+     */
+    public List<PageTemplateEntity> assignmentPageTemplateEntity(){
+        List<Context> contexts = configuration.getContexts();
+        List<PageTemplateEntity> pageTemplateEntities = new ArrayList<PageTemplateEntity>();
+
+        boolean flag;
+        for (Context c:contexts){
+            PageGeneratorConfiguration jgc = c.getPageGeneratorConfiguration();
+            List<TableConfiguration> tableConfigurations = c.getTableConfigurations();
+            Properties properties = jgc.getProperties();
+            for(int i=0; i<tableConfigurations.size(); i++){
+                TableConfiguration t = tableConfigurations.get(i);
+
+                flag = false;
+                for (GeneratedJavaFile gjf : generatedJavaFiles) {
+                    if (gjf.getFileName().contains("WithBLOBs")&& gjf.getFileName().contains(t.getServiceImplObjectName())) {
+                        flag = true;
+                        break;
+                    }
+                }
+
+                PageTemplateEntity pageTemplateEntity = new PageTemplateEntity();
+                pageTemplateEntity.setPageName("manager");
+                String pageTargetPackage = jgc.getTargetProject()+"/"+jgc.getTargetPackage().replaceAll("\\.","/");
+                pageTemplateEntity.setPageTargetPackage(pageTargetPackage);
+                pageTemplateEntity.setColumnsHasBLOB(flag);
+                //树结构
+                pageTemplateEntity.setTreeStructure(t.getTreeStructure());
+
+                IntrospectedTable introspectedTable = c.getIntrospectedTables().get(i);
+                //这个表的所有主键（可能是组合主键，所以可能是多个）
+                pageTemplateEntity.setKeyColumn(introspectedTable.primaryKeyColumns);
+                //这个表的所有字段
+                pageTemplateEntity.setBaseColumns(introspectedTable.getBaseColumns());
+                //这个表的唯一键（或组合）
+                pageTemplateEntity.setCheckUniqueList(t.getCheckUniqueList());
+
+                //要访问的controller地址 和 类名
+                String controllerObjectName = this.getControllerObjectName(t);
+                pageTemplateEntity.setRequestUrl(Character.toLowerCase(controllerObjectName.charAt(0)) + controllerObjectName.substring(1));
+                pageTemplateEntity.setModelClassName(controllerObjectName);
+
+                //添加到集合
+                pageTemplateEntities.add(pageTemplateEntity);
+            }
+        }
+        return pageTemplateEntities;
     }
 
 
@@ -660,6 +725,13 @@ public class MyBatisGenerator {
     public String getControllerObjectName(TableConfiguration t) {
         if (stringHasValue(t.getControllerObjectName())) {
             return t.getControllerObjectName();
+        } else {
+            return getCamelCaseString(t.getTableName(), true);
+        }
+    }
+    public String getPageObjectName(TableConfiguration t) {
+        if (stringHasValue(t.getPageObjectName())) {
+            return t.getPageObjectName();
         } else {
             return getCamelCaseString(t.getTableName(), true);
         }

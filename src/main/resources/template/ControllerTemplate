@@ -20,11 +20,11 @@ import ${modelPackage}.${modelClassName};
 <#list deleteAffectedTableList as dat>
 import ${modelPackage}.${dat.affectedClassName};
 </#list>
-import ${queryModelPackage}.${modelClassName}QueryModel;
 import ${modelServicePackage}.${modelClassName}Service ;
 <#list deleteAffectedTableList as dat>
 import ${modelServicePackage}.${dat.affectedClassName}Service;
 </#list>
+import org.mybatis.generator.internal.util.StringUtility;
 import org.springframework.stereotype.Controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Propagation;
@@ -77,7 +77,7 @@ public class ${modelClassName}Controller {
     @RequestMapping(method = RequestMethod.GET, value = "page${modelClassName}")
     @ResponseBody
     public ListViewModel<${modelClassName}> getPage${modelClassName}(
-            ${modelClassName}QueryModel ${modelClassName?uncap_first}QueryModel,
+            @RequestParam Map ${modelClassName?uncap_first}QueryModel,
             HttpServletRequest request
     ){
         //条件集合
@@ -85,12 +85,48 @@ public class ${modelClassName}Controller {
         List<Object> value = new ArrayList<>();
         List<String> searchType = new ArrayList<>();
 
-        /**
-         * TODO 添加查询条件设置
-         */
+        //查询条件设置
+		<#list baseColumns as b>
+            <#if b.jdbcType ==91 || b.jdbcType ==92 || b.jdbcType ==93>
+        //${(b.remarks)?default('')} ( 开始时间)
+        if (!StringUtility.notNull(${modelClassName?uncap_first}QueryModel.get("${(b.javaProperty)?default('')}_start")).equals("")) {
+            property.add("${(b.javaProperty)?default('')}");
+            value.add(${modelClassName?uncap_first}QueryModel.get("${(b.javaProperty)?default('')}_start"));
+            searchType.add(SearchTypeEnum.GTE.getValue());
+        }
+        //${(b.remarks)?default('')} ( 结束时间)
+        if (!StringUtility.notNull(${modelClassName?uncap_first}QueryModel.get("${(b.javaProperty)?default('')}_end")).equals("")) {
+            property.add("${(b.javaProperty)?default('')}");
+            value.add(${modelClassName?uncap_first}QueryModel.get("${(b.javaProperty)?default('')}_end"));
+            searchType.add(SearchTypeEnum.LTE.getValue());
+        }
+            <#elseif b.jdbcType ==-1 || b.jdbcType ==12 || b.jdbcType ==-1 || b.jdbcType ==2004 || b.jdbcType ==2005 || b.jdbcType ==-15 || b.jdbcType ==-9 || b.jdbcType ==-16>
+        //${(b.remarks)?default('')}
+        if (!StringUtility.notNull(${modelClassName?uncap_first}QueryModel.get("${(b.javaProperty)?default('')}")).equals("")) {
+            property.add("${(b.javaProperty)?default('')}");
+            value.add(${modelClassName?uncap_first}QueryModel.get("${(b.javaProperty)?default('')}"));
+            searchType.add(SearchTypeEnum.LIKE.getValue());
+        }
+            <#else>
+        //${(b.remarks)?default('')}
+        if (!StringUtility.notNull(${modelClassName?uncap_first}QueryModel.get("${(b.javaProperty)?default('')}")).equals("")) {
+            property.add("${(b.javaProperty)?default('')}");
+            value.add(${modelClassName?uncap_first}QueryModel.get("${(b.javaProperty)?default('')}"));
+            searchType.add(SearchTypeEnum.EQ.getValue());
+        }
+            </#if>
 
+		</#list>
+        int pageNumber = 1;
+        if(!StringUtility.notNull(${modelClassName?uncap_first}QueryModel.get("pageNumber")).equals("")){
+            pageNumber = Integer.parseInt(StringUtility.notNull(${modelClassName?uncap_first}QueryModel.get("pageNumber")));
+        }
+        int pageSize = 10;
+        if(!StringUtility.notNull(${modelClassName?uncap_first}QueryModel.get("pageSize")).equals("")){
+            pageSize = Integer.parseInt(StringUtility.notNull(${modelClassName?uncap_first}QueryModel.get("pageSize")));
+        }
         //进行查询
-        PageInfo<${modelClassName}> ${modelClassName?uncap_first}PageInfo = ${modelClassName?uncap_first}Service.findPageInfo(property, value, searchType, ${modelClassName?uncap_first}QueryModel.getOrder(), ${modelClassName}.class, ${modelClassName?uncap_first}QueryModel.getPageNumber(), ${modelClassName?uncap_first}QueryModel.getPageSize());
+        PageInfo<${modelClassName}> ${modelClassName?uncap_first}PageInfo = ${modelClassName?uncap_first}Service.findPageInfo(property, value, searchType, StringUtility.notNull(${modelClassName?uncap_first}QueryModel.get("order")), ${modelClassName}.class, pageNumber, pageSize);
 
         //返回结果
         return new ListViewModel(ListViewModel.CodeEnum.NORMAL.getValue(), ${modelClassName?uncap_first}PageInfo.getTotal(), ${modelClassName?uncap_first}PageInfo.getList());
@@ -117,10 +153,18 @@ public class ${modelClassName}Controller {
         List<Object> value = new ArrayList<>();
         List<String> searchType = new ArrayList<>();
 
-        //上级cd条件
-        property.add("${treeStructure.superCdPropertyName}");
-        value.add(${treeStructure.superCdPropertyName});
-        searchType.add(SearchTypeEnum.EQ.getValue());
+        if( ${treeStructure.superCdPropertyName?uncap_first}.length() > 0){
+            //上级cd条件
+            property.add("${treeStructure.superCdPropertyName}");
+            value.add(${treeStructure.superCdPropertyName});
+            searchType.add(SearchTypeEnum.EQ.getValue());
+        }
+        else{
+            //root
+            property.add("${treeStructure.superCdPropertyName}");
+            value.add("root");
+            searchType.add(SearchTypeEnum.EQ.getValue());
+        }
 
         /**
          * TODO 添加其他筛选条件设置
@@ -218,7 +262,7 @@ public class ${modelClassName}Controller {
          */
 
         //修改
-        if(${modelClassName?uncap_first}.get${keyColumn_javaProperty[0]?cap_first}() != null){
+        if(${modelClassName?uncap_first}.get${keyColumn_javaProperty[0]?cap_first}() != null && ${modelClassName?uncap_first}.get${keyColumn_javaProperty[0]?cap_first}().toString().length() > 0){
             //修改节点信息
             ${modelClassName?uncap_first}Service.updateByPrimaryKeySelective(${modelClassName?uncap_first});
         }
@@ -254,7 +298,7 @@ public class ${modelClassName}Controller {
             </#list>
             </#if>
             <#list c.uniquePropertyNameList as upn>
-            @RequestParam(value = "check_${upn}", required = true) String check_${upn},
+            @RequestParam(value = "${upn}", required = true) String check_${upn},
             </#list>
             HttpServletRequest request
     ){
@@ -386,6 +430,7 @@ public class ${modelClassName}Controller {
      * @return
      */
      @RequestMapping(value = "delete${modelClassName}_physics", method = RequestMethod.GET)
+     @Transactional(propagation=Propagation.REQUIRED, rollbackFor=RuntimeException.class)
      @ResponseBody
      public ResultViewModel delete${modelClassName}_physics(
              <#if (keyColumn_javaProperty?size)?default(0) gt 0>
@@ -421,6 +466,9 @@ public class ${modelClassName}Controller {
         ${modelClassName?uncap_first}Service.delete(${modelClassName?uncap_first});
 
         <#if treeStructure?default('') != '' && (treeStructure.isParentPropertyName)?default('') != ''>
+        //删除子节点
+        ${modelClassName?uncap_first}Service.deleteByProperty("${treeStructure.treeIndexPropertyName?default('')}", "%"+${modelClassName?uncap_first}.get${(treeStructure.selfCdPropertyName?default(''))?cap_first}()+"%", SearchTypeEnum.LIKE.getValue(), ${modelClassName}.class);
+
         //设置所属父节点的isParent
         ${modelClassName?uncap_first}Service.setIsParent(${modelClassName?uncap_first}.get${treeStructure.superCdPropertyName?cap_first}());
 
