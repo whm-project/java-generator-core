@@ -34,16 +34,19 @@
 				    <#if (baseColumns?size)?default(0) gt 12>
 				    <!-- 双行展示 -->
 				    <#list baseColumns as b>
-				    <#if b_index?default(0) % 2 == 0>
+				        <#if b_index?default(0) % 2 == 0>
 				    <div class="form-group">
-				    </#if>
+				        </#if>
                         <label for="${(b.javaProperty)?default('')}" class="col-sm-2 control-label">${(b.remarks)?default('')}：</label>
                         <div class="col-md-3">
                             <input class="form-control" type="text" id="${(b.javaProperty)?default('')}" name="${(b.javaProperty)?default('')}" placeholder="请输入${(b.remarks)?default('')}"/>
                         </div>
-				    <#if b_index?default(0) % 2 == 1>
+                        <#if !b_has_next>
                     </div>
-				    </#if>
+                        </#if>
+				        <#if b_index?default(0) % 2 == 1>
+                    </div>
+				        </#if>
                     </#list>
 
 				    <#else>
@@ -155,7 +158,7 @@
                                 <div class="col-md-3">
                                     <input class="form-control" type="text" id="${(b.javaProperty)?default('')}" name="${(b.javaProperty)?default('')}" placeholder="请输入${(b.remarks)?default('')}"/>
                                 </div>
-							    <#if b_has_next>
+							    <#if !b_has_next>
 							</div>
 							    </#if>
 							</#if>
