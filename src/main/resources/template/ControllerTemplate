@@ -156,7 +156,7 @@ public class ${modelClassName}Controller {
         if( ${treeStructure.superCdPropertyName?uncap_first}.length() > 0){
             //上级cd条件
             property.add("${treeStructure.superCdPropertyName}");
-            value.add(${treeStructure.superCdPropertyName});
+            value.add(${treeStructure.selfCdPropertyName});
             searchType.add(SearchTypeEnum.EQ.getValue());
         }
         else{
