@@ -359,7 +359,7 @@ function searchInfo(){
             formatter : function(value,row,index){
                 var trHtmlStr = "";
                 for(var j=0; j<operationBtn.length; j++){
-                    trHtmlStr +=  "<button type='button' class='btn btn-primary btn-xs' style='padding:1px 5px;' onclick='"+ operationBtn[j].menuOther1 +"("+ row.id +")'>" + operationBtn[j].menuNm + "</button> ";
+                    trHtmlStr +=  "<button type='button' class='btn btn-primary btn-xs' style='padding:1px 5px;' onclick='"+ operationBtn[j].menuOther1 +"("+ row +")'>" + operationBtn[j].menuNm + "</button> ";
                 }
                 return trHtmlStr;
             }
@@ -384,7 +384,7 @@ function setQueryParams(params) {
 }
 
 //编辑
-function editInfo(<#if (keyColumn?size)?default(0) gt 0><#list keyColumn as k>${k.javaProperty?default('')}<#if k_has_next>, </#if></#list></#if>){
+function editInfo(row){
     $.ajax({
         type:"post",
         url:basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/get${modelClassName?default('')}",
@@ -392,7 +392,7 @@ function editInfo(<#if (keyColumn?size)?default(0) gt 0><#list keyColumn as k>${
 		{
 		 <#if (keyColumn?size)?default(0) gt 0>
 			<#list keyColumn as k>
-			"${k.javaProperty?default('')}":${k.javaProperty?default('')}<#if k_has_next>, </#if>
+			"${k.javaProperty?default('')}":row.${k.javaProperty?default('')}<#if k_has_next>, </#if>
 			</#list>
 		 </#if>
 		},
@@ -418,6 +418,11 @@ function editInfo(<#if (keyColumn?size)?default(0) gt 0><#list keyColumn as k>${
 
 //新增
 function addInfo(){
+    <#if (keyColumn?size)?default(0) gt 0>
+        <#list keyColumn as k>
+    $("#${(k.javaProperty)?default('')}").val("");
+        </#list>
+    </#if>
 	<#list baseColumns as b>
 	$("#${(b.javaProperty)?default('')}").val("");
 	</#list>
@@ -432,7 +437,7 @@ function check<#list c.uniquePropertyNameList as upn>${upn?cap_first}<#if upn_ha
     $.ajax({
         type:"get",
         url: basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/check<#list c.uniquePropertyNameList as upn>${upn?default('')?cap_first}<#if upn_has_next>AND</#if></#list>",
-        data:{<#list c.uniquePropertyNameList as upn>${upn?default('')?cap_first}:$("#${upn?default('')}").val()<#if upn_has_next>,</#if></#list>},
+        data:{<#list c.uniquePropertyNameList as upn>${upn?default('')?cap_first}:$("#${upn?default('')}").val()<#if upn_has_next>,</#if></#list><#if (keyColumn?size)?default(0) gt 0><#list keyColumn as k>,${(k.javaProperty)?default('')?cap_first}:$("#${(k.javaProperty)?default('')}").val()</#list></#if>},
         success: function(checkResult) {
             if (checkResult.state == 0) {
                 alert(checkResult.msg);
@@ -494,12 +499,12 @@ function subInfo(){
 }
 
 //删除
-function delInfo(<#if (keyColumn?size)?default(0) gt 0><#list keyColumn as k>${k.javaProperty?default('')}<#if k_has_next>, </#if></#list></#if>){
+function delInfo(row){
     if(confirm("确定删除吗？")){
         $.ajax({
             type:"get",
             url:basePath + "/" + baseOrgCd + "/${requestUrl?default('')}/delete${modelClassName}_physics",
-            data:{<#list keyColumn as k>"${k.javaProperty?default('')}":${k.javaProperty?default('')}<#if k_has_next>,</#if></#list>},
+            data:{<#list keyColumn as k>"${k.javaProperty?default('')}":row.${k.javaProperty?default('')}<#if k_has_next>,</#if></#list>},
             success:function(ref){
                 if(ref.state == "1"){
                     alert("删除成功！");
